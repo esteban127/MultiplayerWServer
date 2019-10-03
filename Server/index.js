@@ -23,6 +23,12 @@ io.on('connection',function(socket){
             console.log(player.id);
         }
     }        
+    socket.on('update',function(data){
+        player.position.x = data.position.x;
+        player.position.y = data.position.y;
+        player.position.z = data.position.z; 
+        socket.broadcast.emit('updateIn',player);
+    })
 
     socket.on('disconnect',function(){
         console.log('bai roberto');  
