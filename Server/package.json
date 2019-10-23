@@ -12,6 +12,6 @@
     "nodemon": "^1.19.2",
     "shortid": "^2.2.15",
     "socketio": "^1.0.0",
-    "soket.io": "0.0.1-security"
+    "soket.node": "0.0.1-security"
   }
 }

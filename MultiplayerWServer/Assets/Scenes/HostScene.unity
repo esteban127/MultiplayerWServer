@@ -149,6 +149,7 @@ MonoBehaviour:
   pingTimeout: 60
   PlayerPrefab: {fileID: 7928071634447931404, guid: aefbf7b238ad9ce4889d9be6d444d1e5,
     type: 3}
+  serverObj: {fileID: 0}
 --- !u!4 &93243814
 Transform:
   m_ObjectHideFlags: 0
@@ -180,7 +181,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &153836335
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1860,7 +1861,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2015249552
 MonoBehaviour:
   m_ObjectHideFlags: 0
