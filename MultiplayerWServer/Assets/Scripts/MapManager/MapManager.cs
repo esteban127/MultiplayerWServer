@@ -7,28 +7,39 @@ using System;
 public class MapManager : MonoBehaviour
 {
     GameObject[,] cells;
+    Node[,] nodes;
     int size = 19;
     [SerializeField] GameObject cellPrefab;
 
     string[,] cellInfo;
 
+    private void Start()
+    {
+        GenerateMap();
+    }
+
     public void GenerateMap()
     {
         LoadJsonMap();
         cells = new GameObject[size, size];
+        nodes = new Node[size, size];
+        List<CellType> totalTypes;
+        bool walkeable;
         for (int i = 0; i < size; i++)
         {
             for (int j = 0; j < size; j++)
             {        
                 GameObject cell = Instantiate(cellPrefab, new Vector3(i, 0, j), new Quaternion(), transform);
-                List<CellType> totalTypes = new List<CellType>();
+                totalTypes = new List<CellType>();
                 string[] info = cellInfo[i, j].Split(new char[] { '-' });
+                walkeable = true;
                 foreach(string type in info)
                 {
                     switch (type)
                     {
                         case "b":
                             totalTypes.Add(CellType.Block);
+                            walkeable = false;
                             break;
                         case "be":
                             totalTypes.Add(CellType.BuffEnergize);
@@ -50,6 +61,7 @@ public class MapManager : MonoBehaviour
                             break;
                         case "u":
                             totalTypes.Add(CellType.Unwalkable);
+                            walkeable = false;
                             break;
                         case "wc":
                             totalTypes.Add(CellType.Wcover);
@@ -78,10 +90,47 @@ public class MapManager : MonoBehaviour
                     }
                 }     
                 cell.GetComponent<Cell>().cellType = totalTypes;
+                nodes[i, j] = new Node(new Vector2(i, j), walkeable);
                 cell.name = (i + " , " + j);
                 cells[i, j] = cell;
             }
         }
+    }
+    
+    public List<Node> GetNeighborsNodes(Node currentNode)
+    {
+        List<Node> neighbords = new List<Node>();
+        Vector2 coord = currentNode.Pos;
+        int x;
+        int y;
+        for (int i = -1; i <= 1; i++)
+        {
+            x = (int)coord.x + i;
+            for (int j = -1; j <= 1; j++)
+            {
+                y = (int)coord.y+j;
+                if(Mathf.Abs(i) == 1 && Mathf.Abs(j) == 1)
+                {
+                    if (CheckAvialableNode(x-i, y)&& CheckAvialableNode(x, y-j))
+                        if (CheckAvialableNode(x, y))
+                            neighbords.Add(nodes[x, y]);
+                }
+                else
+                {
+                    if (CheckAvialableNode(x, y))
+                        neighbords.Add(nodes[x, y]);
+                }                
+            }
+        }
+        return neighbords;
+    }
+    public bool CheckAvialableNode(int posX,int posY)
+    {
+        if (posX >= 0 && posY >= 0 && posX <= size - 1 && posY <= size - 1)
+        {
+            return nodes[posX, posY].Walkable;            
+        }
+        return false;
     }
 
     private void LoadJsonMap()
@@ -123,6 +172,28 @@ public class MapManager : MonoBehaviour
             if (Application.isEditor)
                 DestroyImmediate(transform.GetChild(childCount-i-1).gameObject);
         }
+    }
+    public Cell GetCellFromWorldPosition(Vector3 pos)
+    {
+        if (pos.x >= 0 && pos.x < size && pos.z >= 0 && pos.z < size)
+            return cells[(int)pos.x, (int)pos.z].GetComponent<Cell>();
+
+
+        Debug.LogError("there is no cell for the pos" + (int)pos.x + ", " + (int)pos.y);
+        return null;
+    }
+    public Node GetNodeFromWorldPosition(Vector3 pos)
+    {
+        if (pos.x >= 0 && pos.x < size && pos.z >= 0 && pos.z < size)
+            return nodes[(int)pos.x, (int)pos.z];
+
+
+        Debug.LogError("there is no node for the pos" + (int)pos.x + ", " + (int)pos.y);
+        return null;
+    }
+    public Cell getCellFromNode(Node node)
+    {
+        return cells[(int)node.Pos.x,(int)node.Pos.y].GetComponent<Cell>();
     }
 }
 
