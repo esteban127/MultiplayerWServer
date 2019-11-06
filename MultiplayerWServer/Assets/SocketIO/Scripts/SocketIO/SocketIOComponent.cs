@@ -52,7 +52,15 @@ namespace SocketIO
 		public WebSocket socket { get { return ws; } }
 		public string sid { get; set; }
 		public bool IsConnected { get { return connected; } }
-
+        public void SetSocket(string newUrl)
+        {
+            ws = new WebSocket(newUrl);
+            ws.OnOpen += OnOpen;
+            ws.OnMessage += OnMessage;
+            ws.OnError += OnError;
+            ws.OnClose += OnClose;
+            wsConnected = false;
+        }
 		#endregion
 
 		#region Private Properties
@@ -81,15 +89,15 @@ namespace SocketIO
 		private object ackQueueLock;
 		private Queue<Packet> ackQueue;
 
-		#endregion
+        #endregion
 
-		#if SOCKET_IO_DEBUG
-		public Action<string> debugMethod;
-		#endif
+    #if SOCKET_IO_DEBUG
+    		public Action<string> debugMethod;
+    #endif
 
-		#region Unity interface
+        #region Unity interface
 
-		public void Awake()
+        protected virtual void Awake()
 		{
 			encoder = new Encoder();
 			decoder = new Decoder();
@@ -119,12 +127,12 @@ namespace SocketIO
 			#endif
 		}
 
-		public virtual void Start()
+        protected virtual void Start()
 		{
 			if (autoConnect) { Connect(); }
 		}
 
-        public virtual void Update()
+        protected virtual void Update()
 		{
 			lock(eventQueueLock){ 
 				while(eventQueue.Count > 0){
