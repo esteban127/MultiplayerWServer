@@ -164,6 +164,34 @@ public class MovementManager : MonoBehaviour
             }
         }
     }
+    public void DrawTurn1Movement(int team)
+    {
+        Vector2 center = map.GetSpawnBaseSpawnPoint(team);
+        center.x += team == 0 ? 1 : -1;
+        List<Node> centerNodes = map.GetAllNodesInARange(map.GetNodeFromACoord(center), 5);
+        center.x += team == 0 ? 1 : -1;
+        center.y += 8;
+        List<Node> rigthNodes = map.GetAllNodesInARange(map.GetNodeFromACoord(center), 2);
+        center.y -= 16;
+        List<Node> leftNodes = map.GetAllNodesInARange(map.GetNodeFromACoord(center), 2);
+        foreach(Node node in centerNodes)
+        {
+            walkableNodes.Add(node);
+        }
+        foreach (Node node in rigthNodes)
+        {
+            walkableNodes.Add(node);
+        }
+        foreach (Node node in leftNodes)
+        {
+            walkableNodes.Add(node);
+        }
+
+        foreach (Node node in walkableNodes)
+        {            
+            map.getCellFromNode(node).SetWalkableColor();           
+        }
+    }
     public void DrawMovementRangeWScore(Cell start,int score)//recive player insted
     {
         walkableNodes = GetAllNodesUnderAScore(start.transform, score);

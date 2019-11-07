@@ -5,22 +5,28 @@ using SocketIO;
 using UnityEngine.UI;
 using System;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
 public class Server : SocketIOComponent
 {
-    static public string id;
+    static public string id;    
     Dictionary<string, MyNetworkIdentity> connectedPlayers;
+    public Dictionary<string, MyNetworkIdentity>  ConnectedPlayers { get { return connectedPlayers; } }
     [SerializeField] Dictionary<string, ServerObject> SpawnedObjects;
     [SerializeField] Lobby hostingLobby;
     [SerializeField] GameObject connectingW;
     [SerializeField] GameObject failedToConnectW;
     ServerObjectManager serverObj;
     bool isHost = false;
+    public bool IsHost { get { return isHost; } }
     string hostIP;
     string playerName = "Pedro";
     bool serverConnection = false;
+    string currentScene = "HostScene";
+    public string CurrentScene { get { return currentScene; } }
     [SerializeField] string port = "8080";
-
+    public delegate void SaveDelegate();
+    public static event SaveDelegate BeforeClosing;
 
     static private Server instance = null;
     static public Server Instance { get { return instance; } }
@@ -152,6 +158,11 @@ public class Server : SocketIOComponent
              connectedPlayers.Remove(playerID);
          }
         );
+        On("startGame",(start) =>
+         {
+             ChangeScene("GameScene");
+         }
+        );
     }
     public void JoinLobby()
     {        
@@ -221,7 +232,37 @@ public class Server : SocketIOComponent
 
     public void StartGame()
     {
-        Debug.Log("Start The GAMEE!!");
+        Emit("gameHosted");
+        ChangeScene("GameScene");
+    }
+    public void ChangeScene(string sceneName)
+    {
+        if (BeforeClosing != null)
+        {
+            BeforeClosing();
+            CleanDelegate();
+        }
+        currentScene = sceneName;
+        SceneManager.LoadScene("LoadingScreen", LoadSceneMode.Single);
+    }
+
+    public void QuitApplication()
+    {
+        if (BeforeClosing != null)
+        {
+            BeforeClosing();
+            CleanDelegate();
+        }
+        Application.Quit();
+    }
+
+    private void CleanDelegate()
+    {
+        Delegate[] functions = BeforeClosing.GetInvocationList();
+        for (int i = 0; i < functions.Length; i++)
+        {
+            BeforeClosing -= (SaveDelegate)functions[i];
+        }
     }
 
 }

@@ -13,7 +13,7 @@ public class MapManager : MonoBehaviour
 
     string[,] cellInfo;
 
-    private void Start()
+    private void Awake()
     {
         GenerateMap();
     }
@@ -96,7 +96,25 @@ public class MapManager : MonoBehaviour
             }
         }
     }
-    
+    public List<Node> GetAllNodesInARange(Node currentNode, int range)
+    {
+        List<Node> neighbords = new List<Node>();
+        Vector2 coord = currentNode.Pos;
+        int x;
+        int y;
+        for (int i = -range; i <= range; i++)
+        {
+            x = (int)coord.x + i;
+            for (int j = -range; j <= range; j++)
+            {
+                y = (int)coord.y + j;
+                if (CheckAvialableNode(x, y))
+                    neighbords.Add(nodes[x, y]);
+            }
+        }
+        return neighbords;
+    }
+
     public List<Node> GetNeighborsNodes(Node currentNode)
     {
         List<Node> neighbords = new List<Node>();
@@ -188,12 +206,27 @@ public class MapManager : MonoBehaviour
             return nodes[(int)pos.x, (int)pos.z];
 
 
-        Debug.LogError("there is no node for the pos" + (int)pos.x + ", " + (int)pos.y);
+        Debug.LogError("there is no node for the pos" + (int)pos.x + ", " + (int)pos.z);
+        return null;
+    }
+    public Node GetNodeFromACoord(Vector2 coord)
+    {        
+        if (coord.x >= 0 && coord.x < size && coord.y >= 0 && coord.y < size)
+            return nodes[(int)coord.x, (int)coord.y];
+
+
+        Debug.LogError("there is no node for the pos" + (int)coord.x + ", " + (int)coord.y);
         return null;
     }
     public Cell getCellFromNode(Node node)
     {
         return cells[(int)node.Pos.x,(int)node.Pos.y].GetComponent<Cell>();
+    }
+    public Vector2 GetSpawnBaseSpawnPoint(int team)
+    {
+        Vector2 spawn;
+        spawn = team == 0 ? new Vector2(2, 9) : new Vector2(16, 9);
+        return spawn;
     }
 }
 

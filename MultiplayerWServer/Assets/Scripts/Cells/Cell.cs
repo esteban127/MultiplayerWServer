@@ -31,7 +31,7 @@ public class Cell : MonoBehaviour
     [SerializeField] Color walkableColor;
     [SerializeField] Color sprintableColor;
 
-    private void Start()
+    private void Awake()
     {
         materialInstance = gameObject.GetComponent<Renderer>().material;
         SetBaseColor();

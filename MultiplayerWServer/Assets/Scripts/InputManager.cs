@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
-    public float distance = 50f;
     GameObject lastCell;
     GameObject lastCellClicked;
     GameObject lastCellClickedR;
@@ -23,9 +22,9 @@ public class InputManager : MonoBehaviour
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
-        Debug.DrawRay(ray.origin,ray.direction * distance, Color.red);
+        Debug.DrawRay(ray.origin,ray.direction * 50f, Color.red);
         int layer_mask = LayerMask.GetMask("Cells");        
-        if (Physics.Raycast(ray, out hit, distance, layer_mask))
+        if (Physics.Raycast(ray, out hit, 50f, layer_mask))
         {
             if (lastCell != hit.transform.gameObject)
             {
@@ -60,8 +59,8 @@ public class InputManager : MonoBehaviour
                     lastCell.GetComponent<Cell>().HighLight(true);
 
                 characterPos = lastCellClicked.transform;
-                movementMan.ResetFloorColor();
-                movementMan.DrawMovementRangeWScore(lastCellClicked.GetComponent<Cell>(),48);
+                /*movementMan.ResetFloorColor();
+                movementMan.DrawMovementRangeWScore(lastCellClicked.GetComponent<Cell>(),48);*/
                 lastCellClicked = null;
             }            
         }

@@ -38,6 +38,9 @@ io.on('connection',function(socket){
             }
         }   
     })
+    socket.on('gameHosted',function(data){        
+        socket.broadcast.emit('startGame');
+    })
     socket.on('update',function(data){        
         player.position.x = data.position.x;
         player.position.y = data.position.y;

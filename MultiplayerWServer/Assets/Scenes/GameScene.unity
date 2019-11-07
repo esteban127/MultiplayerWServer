@@ -277,6 +277,7 @@ GameObject:
   - component: {fileID: 466856401}
   - component: {fileID: 466856400}
   - component: {fileID: 466856402}
+  - component: {fileID: 466856403}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -296,7 +297,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebb60d84aed9d7a468b7a3fabf55bf14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  distance: 50
   movementMan: {fileID: 466856402}
   map: {fileID: 1683298630}
 --- !u!4 &466856401
@@ -326,6 +326,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   map: {fileID: 1683298630}
+--- !u!114 &466856403
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 466856399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 807722fcfb0055946943dc02d986503e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mapManager: {fileID: 1683298630}
+  mov: {fileID: 466856402}
+  character0: {fileID: 778998144979383206, guid: 1115677b7a904c74d979bfa326ac7167,
+    type: 3}
+  character1: {fileID: 778998144979383206, guid: 1115677b7a904c74d979bfa326ac7167,
+    type: 3}
 --- !u!1 &1175339764
 GameObject:
   m_ObjectHideFlags: 0
