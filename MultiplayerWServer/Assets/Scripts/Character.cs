@@ -23,10 +23,12 @@ public class Character : MonoBehaviour
     private int team;
     public int Team { get { return team; } }
     private Vector2 currentPos;
+    public Vector2 Pos { get { return currentPos; } }
     private int energy = 0;
     private int health;
     private int shield = 0;
     private int movScore;
+    public int MovScore { get { return movScore; } set{ movScore = value; } }
     private List<status> currentStatus;
 
     [SerializeField] private int maxHealth;
@@ -34,6 +36,10 @@ public class Character : MonoBehaviour
     public void ResetTurnValues()
     {
         movScore = 48 + (currentStatus.Contains(status.slowed) ? -20 : 0) + (currentStatus.Contains(status.hasted) ? 20 : 0);        
+    }
+    public void ApplyStatus(status status)
+    {
+        Debug.Log("gain status " + status.ToString());
     }
     public void Spawn(Vector2 pos, int _team)
     {
@@ -48,5 +54,13 @@ public class Character : MonoBehaviour
         currentStatus = new List<status>();
         transform.position = new Vector3(pos.x,0,pos.y);
     }
+
+    public void Move(Vector2 pos)
+    {
+        movScore -= Node.CalculateDistance(pos,currentPos);
+        transform.position = new Vector3(pos.x, 0, pos.y);        
+        currentPos = pos;        
+    }
+
 
 }

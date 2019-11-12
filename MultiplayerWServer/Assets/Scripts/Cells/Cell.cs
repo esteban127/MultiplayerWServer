@@ -30,11 +30,16 @@ public class Cell : MonoBehaviour
     [SerializeField] Color baseColor;
     [SerializeField] Color walkableColor;
     [SerializeField] Color sprintableColor;
-
+    [SerializeField] Color currentCell;
+    //List<Traps> traps
     private void Awake()
     {
         materialInstance = gameObject.GetComponent<Renderer>().material;
         SetBaseColor();
+    }
+    public void CheckTrap(int team)
+    {
+        //shouldReturnTraps
     }
 
     public void HighLight(bool highlighted)
@@ -47,6 +52,8 @@ public class Cell : MonoBehaviour
         }        
     }
 
+    
+
     public void ClickedHighLight(bool clicked)
     {
         beingClicked = clicked;
@@ -57,6 +64,10 @@ public class Cell : MonoBehaviour
     public void SetBaseColor()
     {
         materialInstance.color = baseColor;
+    }
+    public void SetCurrentCellColor()
+    {
+        materialInstance.color = currentCell;
     }
     public void SetWalkableColor()
     {
@@ -103,11 +114,25 @@ public class Node
 
 
 
-    int CalculateDistance(Vector2 from, Vector2 to)
+    public static int CalculateDistance(Vector2 from, Vector2 to)
     {
         int distance = 0;
         int x = (int)Mathf.Abs(to.x - from.x);
         int y = (int)Mathf.Abs(to.y - from.y);
+        if (x <= y)
+            distance += x * 14;
+        else
+            distance += y * 14;
+
+        distance += Mathf.Abs(x - y) * 10;
+        return distance;
+
+    }
+    public int CalculateDistance(Vector2 to)
+    {
+        int distance = 0;
+        int x = (int)Mathf.Abs(to.x - pos.x);
+        int y = (int)Mathf.Abs(to.y - pos.y);
         if (x <= y)
             distance += x * 14;
         else

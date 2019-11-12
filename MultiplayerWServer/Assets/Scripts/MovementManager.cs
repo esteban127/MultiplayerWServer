@@ -8,12 +8,15 @@ public class MovementManager : MonoBehaviour
     Node[] path;
     float t;
     List<Node> walkableNodes;
-
+    List<Node> sprintableNodes;
+    Node startingNode;
+    
     private void Start()
     {
         walkableNodes = new List<Node>();
+        sprintableNodes = new List<Node>();
     }
-    public Node[] GetPath(Transform start, Transform goal)
+    public Node[] GetPath(Node start, Node goal)
     {
         if (FindPath(goal, start))
         {
@@ -23,9 +26,9 @@ public class MovementManager : MonoBehaviour
             return null;
 
     }
-    public List<Node> GetAllNodesUnderAScore(Transform start,int maxScore)
+    public List<Node> GetAllNodesUnderAScore(Node start,int maxScore)
     {
-        Node startingNode = map.GetNodeFromWorldPosition(start.position);
+        Node startingNode = start;
         List<Node> availableNodes = new List<Node>();
         List<Node> closedNodes = new List<Node>();
         availableNodes.Add(startingNode);
@@ -63,20 +66,31 @@ public class MovementManager : MonoBehaviour
             }
 
         }
+        closedNodes.Remove(start);
         return closedNodes;
     }
 
-    bool FindPath(Transform objetive, Transform start)
+    public List<Node> GetAllNodesBetweenScores(Node start, int minScore, int maxScore)
     {
-        Node startingNode = map.GetNodeFromWorldPosition(start.position);
-        Node objetiveNode = map.GetNodeFromWorldPosition(objetive.position);
+        List<Node> totalNodes = GetAllNodesUnderAScore(start, maxScore);
+        List<Node> finalNodes = new List<Node>();
+        foreach(Node node in totalNodes)
+        {
+            if (node.g >= minScore)
+            {
+                finalNodes.Add(node);
+            }
+        }
+        return finalNodes;
+    }
+    bool FindPath(Node objetiveNode, Node startingNode)
+    {
         List<Node> availableNodes = new List<Node>();
         List<Node> closedNodes = new List<Node>();
         availableNodes.Add(startingNode);
         Node currentNode = startingNode;
         currentNode.CalculateF(startingNode, objetiveNode.Pos);
         List<Node> currentNeighbords;
-        Debug.Log("Debo llegar a" + objetiveNode.Pos);
 
         while (availableNodes.Count > 0)
         {
@@ -98,7 +112,6 @@ public class MovementManager : MonoBehaviour
 
             if (currentNode == objetiveNode)
             {
-                Debug.Log("Llegue a " + objetiveNode.Pos);
                 while (currentNode != startingNode)
                 {
                     CalculatePath(objetiveNode, startingNode);
@@ -122,7 +135,6 @@ public class MovementManager : MonoBehaviour
                 }
                 else if (!closedNodes.Contains(currentNeighbords[i]))
                 {
-
                     currentNeighbords[i].CalculateF(currentNode, objetiveNode.Pos);
                     //Debug.Log("agrego el nodo nuevo con f = " + currentNeighbords[i].f);
                     availableNodes.Add(currentNeighbords[i]);
@@ -149,19 +161,22 @@ public class MovementManager : MonoBehaviour
         }
     }
 
-    public void DrawMovementRangeWSprint(Cell start)//recive player insted
-    {            
-        walkableNodes = GetAllNodesUnderAScore(start.transform, 92);
-        foreach(Node node in walkableNodes)
+    public void DrawMovementSprintRange(Node start, int sprintScore, int walkableScore)
+    {
+        sprintableNodes = GetAllNodesBetweenScores(start, walkableScore, sprintScore);
+        foreach(Node node in sprintableNodes)
         {
-            if (node.g < 48)
-            {
-                map.getCellFromNode(node).SetWalkableColor();
-            }
-            else
-            {
-                map.getCellFromNode(node).SetSprintableColor();
-            }
+            map.getCellFromNode(node).SetSprintableColor();            
+        }
+    }
+    public void DrawMovementWalkableRange(Node start, int walkableScore)
+    {
+        walkableNodes = GetAllNodesUnderAScore(start, walkableScore);
+        startingNode = start;
+        map.getCellFromNode(start).SetCurrentCellColor();
+        foreach (Node node in walkableNodes)
+        {            
+            map.getCellFromNode(node).SetWalkableColor();            
         }
     }
     public void DrawTurn1Movement(int team)
@@ -192,9 +207,9 @@ public class MovementManager : MonoBehaviour
             map.getCellFromNode(node).SetWalkableColor();           
         }
     }
-    public void DrawMovementRangeWScore(Cell start,int score)//recive player insted
+    public void DrawMovementRangeWScore(Node start,int score)//recive player insted
     {
-        walkableNodes = GetAllNodesUnderAScore(start.transform, score);
+        walkableNodes = GetAllNodesUnderAScore(start, score);
         foreach (Node node in walkableNodes)
         {                
             map.getCellFromNode(node).SetWalkableColor();                
@@ -202,12 +217,17 @@ public class MovementManager : MonoBehaviour
     }
     public void ResetFloorColor()
     {
+        map.getCellFromNode(startingNode).SetBaseColor();
         foreach (Node node in walkableNodes)
         {
             map.getCellFromNode(node).SetBaseColor();
         }
+        foreach (Node node in sprintableNodes)
+        {
+            map.getCellFromNode(node).SetBaseColor();
+        }
     }
-    public Node[] getCalculatedPath(Node startingNode, Node targetNode)
+    public Node[] GetCalculatedPath(Node startingNode, Node targetNode)
     {
         List<Node> provitionalList = new List<Node>();
         Node currentNode = targetNode;
@@ -224,5 +244,12 @@ public class MovementManager : MonoBehaviour
         }
         return calculatedPath;
     }
-    
+    public bool WalkableNode(Node node)
+    {
+        return walkableNodes.Contains(node);
+    }
+    public bool SprintableNode(Node node)
+    {
+        return sprintableNodes.Contains(node);
+    }
 }

@@ -16,6 +16,7 @@ public class Server : SocketIOComponent
     [SerializeField] Lobby hostingLobby;
     [SerializeField] GameObject connectingW;
     [SerializeField] GameObject failedToConnectW;
+    GameDirector currentGameDirectror = null;
     ServerObjectManager serverObj;
     bool isHost = false;
     public bool IsHost { get { return isHost; } }
@@ -27,9 +28,13 @@ public class Server : SocketIOComponent
     [SerializeField] string port = "8080";
     public delegate void SaveDelegate();
     public static event SaveDelegate BeforeClosing;
-
     static private Server instance = null;
     static public Server Instance { get { return instance; } }
+
+    public void SetGameDirector(GameDirector instance)
+    {
+        currentGameDirectror = instance;
+    }
 
     protected override void Awake()
     {
@@ -164,6 +169,12 @@ public class Server : SocketIOComponent
          }
         );
     }
+
+    public void ReadyToEndTurn()
+    {
+
+    }
+
     public void JoinLobby()
     {        
         hostingLobby.Join(isHost);        
@@ -267,7 +278,6 @@ public class Server : SocketIOComponent
 
 }
 
-
 [System.Serializable]
 class PlayerData
 {
@@ -289,6 +299,17 @@ class Vector3Data
     public float x;
     public float y;
     public float z;
+}
+[System.Serializable]
+class MovData
+{
+    public List<List<Vector2Data>> movs;
+}
+[System.Serializable]
+class Vector2Data
+{
+    public float x;
+    public float y;
 }
 
 [System.Serializable]

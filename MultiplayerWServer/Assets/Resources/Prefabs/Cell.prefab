@@ -95,6 +95,7 @@ MonoBehaviour:
   baseColor: {r: 1, g: 1, b: 1, a: 0.47058824}
   walkableColor: {r: 0.43529415, g: 1, b: 1, a: 0.47843137}
   sprintableColor: {r: 0.36418653, g: 0.8301887, b: 0.8301887, a: 0.47843137}
+  currentCell: {r: 0.7715568, g: 0.7735849, b: 0.21529014, a: 0.47843137}
 --- !u!65 &1794853989024300665
 BoxCollider:
   m_ObjectHideFlags: 0

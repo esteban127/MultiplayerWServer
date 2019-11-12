@@ -6,16 +6,17 @@ public class InputManager : MonoBehaviour
 {
     GameObject lastCell;
     GameObject lastCellClicked;
-    GameObject lastCellClickedR;
     Transform cameraTransform;
     float cameraSpeed = 20f;
-    Transform characterPos;
-    [SerializeField] MovementManager movementMan;
+    MovementManager movementMan;
+    GameDirector gameDirector;
     [SerializeField] MapManager map;
 
     private void Start()
     {
-        cameraTransform = Camera.main.transform;        
+        cameraTransform = Camera.main.transform;
+        movementMan = GetComponent<MovementManager>();
+        gameDirector = GetComponent<GameDirector>();
     }
 
     void FixedUpdate()
@@ -37,12 +38,7 @@ public class InputManager : MonoBehaviour
             {
                 lastCellClicked = hit.transform.gameObject;
                 lastCellClicked.GetComponent<Cell>().ClickedHighLight(true);
-            }
-            if (Input.GetMouseButtonDown(1)) //cellClick
-            {
-                lastCellClickedR = hit.transform.gameObject;
-                lastCellClickedR.GetComponent<Cell>().ClickedHighLight(true);
-            }
+            }            
 
         }        
 
@@ -57,27 +53,23 @@ public class InputManager : MonoBehaviour
                 lastCellClicked.GetComponent<Cell>().ClickedHighLight(false);
                 if (lastCellClicked == lastCell)
                     lastCell.GetComponent<Cell>().HighLight(true);
-
-                characterPos = lastCellClicked.transform;
-                /*movementMan.ResetFloorColor();
-                movementMan.DrawMovementRangeWScore(lastCellClicked.GetComponent<Cell>(),48);*/
+                Node currentNode = map.GetNodeFromWorldPosition(lastCell.transform.position);
+                if (movementMan.WalkableNode(currentNode))
+                {
+                    gameDirector.MovCommand(currentNode);
+                }
+                else if(movementMan.SprintableNode(currentNode))
+                {
+                    gameDirector.SprintCommand(currentNode);
+                }
                 lastCellClicked = null;
             }            
         }
         if (Input.GetMouseButtonUp(1)) //cellReleased
         {
-            if (lastCellClickedR != null)
-            {
-                Node end = map.GetNodeFromWorldPosition(lastCellClickedR.transform.position);
-                Node start = map.GetNodeFromWorldPosition(characterPos.position);
-                Node[] nodes = movementMan.getCalculatedPath(start, end);
-                foreach (Node node in nodes)
-                {
-                    Debug.Log(node.Pos);
-                }
-                lastCellClickedR = null;
-            }
+            gameDirector.DeleteLastAction();
         }
+
         if (Input.GetAxisRaw("Horizontal") != 0)
         {
             cameraTransform.position = cameraTransform.position + cameraTransform.right * Time.deltaTime * cameraSpeed *Input.GetAxisRaw("Horizontal");
