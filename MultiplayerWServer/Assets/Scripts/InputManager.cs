@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,7 +11,8 @@ public class InputManager : MonoBehaviour
     float cameraSpeed = 20f;
     MovementManager movementMan;
     GameDirector gameDirector;
-    [SerializeField] MapManager map;
+    [SerializeField] MapManager map;    
+    public static bool inputEneable = true;
 
     private void Start()
     {
@@ -34,50 +36,68 @@ public class InputManager : MonoBehaviour
                 lastCell = hit.transform.gameObject;
                 lastCell.GetComponent<Cell>().HighLight(true);
             }
-            if (Input.GetMouseButtonDown(0)) //cellClick
-            {
-                lastCellClicked = hit.transform.gameObject;
-                lastCellClicked.GetComponent<Cell>().ClickedHighLight(true);
-            }            
-
-        }        
+        }
+        else
+        {
+            lastCell = null;
+        }      
 
     }
     private void Update()
     {
-        
-        if (Input.GetMouseButtonUp(0)) //cellReleased
+        if (inputEneable)
         {
-            if (lastCellClicked != null)
+            if (Input.GetMouseButtonDown(0)) //cellClick
             {
-                lastCellClicked.GetComponent<Cell>().ClickedHighLight(false);
-                if (lastCellClicked == lastCell)
-                    lastCell.GetComponent<Cell>().HighLight(true);
-                Node currentNode = map.GetNodeFromWorldPosition(lastCell.transform.position);
-                if (movementMan.WalkableNode(currentNode))
+                if (lastCell != null)
                 {
-                    gameDirector.MovCommand(currentNode);
+                    lastCellClicked = lastCell;
+                    lastCellClicked.GetComponent<Cell>().ClickedHighLight(true);
                 }
-                else if(movementMan.SprintableNode(currentNode))
+            }
+            if (Input.GetMouseButtonUp(0)) //cellReleased
+            {
+                if (lastCellClicked != null)
                 {
-                    gameDirector.SprintCommand(currentNode);
-                }
-                lastCellClicked = null;
-            }            
-        }
-        if (Input.GetMouseButtonUp(1)) //cellReleased
-        {
-            gameDirector.DeleteLastAction();
+                    lastCellClicked.GetComponent<Cell>().ClickedHighLight(false);
+                    if (lastCellClicked == lastCell)
+                        lastCell.GetComponent<Cell>().HighLight(true);
+                    Node currentNode = map.GetNodeFromWorldPosition(lastCellClicked.transform.position);
+                    if (movementMan.WalkableNode(currentNode))
+                    {
+                        gameDirector.MovCommand(currentNode);
+                    }
+                    else if(movementMan.SprintableNode(currentNode))
+                    {
+                        gameDirector.SprintCommand(currentNode);
+                    }
+                    lastCellClicked = null;
+                }            
+            }
+            if (Input.GetMouseButtonUp(1)) //cellReleased
+            {
+                gameDirector.DeleteLastAction();
+            }
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                gameDirector.ReadyToEndTurn();
+            }
         }
 
+        CameraImputs();              
+        
+    }
+
+    private void CameraImputs()
+    {
         if (Input.GetAxisRaw("Horizontal") != 0)
         {
-            cameraTransform.position = cameraTransform.position + cameraTransform.right * Time.deltaTime * cameraSpeed *Input.GetAxisRaw("Horizontal");
+            cameraTransform.position = cameraTransform.position + cameraTransform.right * Time.deltaTime * cameraSpeed * Input.GetAxisRaw("Horizontal");
         }
         if (Input.GetAxisRaw(("Vertical")) != 0)
-        {           
-            cameraTransform.position = cameraTransform.position +new Vector3(cameraTransform.forward.x, 0, cameraTransform.forward.z).normalized * Time.deltaTime * cameraSpeed* Input.GetAxisRaw("Vertical");
-        }        
+        {
+            cameraTransform.position = cameraTransform.position + new Vector3(cameraTransform.forward.x, 0, cameraTransform.forward.z).normalized * Time.deltaTime * cameraSpeed * Input.GetAxisRaw("Vertical");
+        }
         if (Input.GetKeyDown(KeyCode.Q))
         {
             cameraTransform.RotateAround(new Vector3(9, 0, 9), new Vector3(0, 1, 0), 90);

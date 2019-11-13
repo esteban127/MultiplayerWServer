@@ -5,6 +5,7 @@ var Bullet = require('./src/Bullet.js')
 console.log('Server Initialized');
 
 var players = [];
+var actionData = [];
 var sockets = [];
 var bullets = [];
 
@@ -38,6 +39,75 @@ io.on('connection',function(socket){
             }
         }   
     })
+    socket.on('readyToEndTurn',function(){        
+        player.ready = true;
+        if(player.ready){
+            console.log("PlayerReady")
+        }
+        var allReady = true;
+        for(var playerID in players){
+            if(!players[playerID].ready){
+                allReady = false;
+            }
+        }   
+        if(allReady){
+            for(var playerID in players){
+                players[playerID].ready = false;
+            } 
+            console.log("EndTurn");
+            socket.emit('endTurn');
+            socket.broadcast.emit('endTurn');            
+        }
+
+    })
+    socket.on('submitActionData',function(data){        
+        actionData[player.id] = data;
+        console.log("DataSubmited on " + player.id);
+        var allSubmited = true;
+        for(var playerID in players){
+            if(actionData[playerID]== null)
+            {
+                allSubmited = false; 
+                console.log("falto yo wacho");            
+            }
+            else
+            {
+                console.log(actionData[playerID]);
+            }
+        } 
+        if(allSubmited){
+            for(var playerID in players){               
+            socket.emit('recieveActionData',actionData[playerID]); 
+            socket.broadcast.emit('recieveActionData',actionData[playerID]); 
+            }   
+            actionData = [];
+            console.log("StartActionTurn");
+            socket.emit('startActionTurn'); 
+            socket.broadcast.emit('startActionTurn');
+        }
+    })
+    socket.on('replicationEnded',function(){
+        //socket.broadcast('sincroniceData',data)
+        player.ready = true;
+        if(player.ready){
+            console.log("PlayerReady")
+        }
+        var allReady = true;
+        for(var playerID in players){
+            if(!players[playerID].ready){
+                allReady = false;
+            }
+        }   
+        if(allReady){
+            for(var playerID in players){
+                players[playerID].ready = false;
+            } 
+            console.log("newTurn");
+            socket.emit('newTurn');
+            socket.broadcast.emit('newTurn');          
+        }
+                 
+    })
     socket.on('gameHosted',function(data){        
         socket.broadcast.emit('startGame');
     })
@@ -65,7 +135,7 @@ io.on('connection',function(socket){
         delete(sockets[player.id]);
         socket.broadcast.emit('playerDisconnected',player)              
     });
-    socket.on('fireBullet',function(data){
+    /*socket.on('fireBullet',function(data){
         var bullet = new Bullet();
         bullet.velocity.x = data.velocity.x;        
         bullet.velocity.y = data.velocity.y;        
@@ -76,7 +146,7 @@ io.on('connection',function(socket){
         bullets[bullet.id] = bullet;
         socket.emit('spawnObject');
         socket.broadcast('spawnObject');
-    });
+    });*/
 });
 
 function update(func, wait, loops) {

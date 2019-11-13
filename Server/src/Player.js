@@ -7,5 +7,6 @@ module.exports = class Player{
         this.name;
         this.id = shortid.generate();
         this.position = new vector3();
+        this.ready= false;
     }
 }

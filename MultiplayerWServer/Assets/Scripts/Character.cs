@@ -43,6 +43,7 @@ public class Character : MonoBehaviour
     }
     public void Spawn(Vector2 pos, int _team)
     {
+        movScore = 200; //turn 1
         team = _team;
         Spawn(pos);        
     }
@@ -57,9 +58,9 @@ public class Character : MonoBehaviour
 
     public void Move(Vector2 pos)
     {
+        currentPos = pos;
         movScore -= Node.CalculateDistance(pos,currentPos);
-        transform.position = new Vector3(pos.x, 0, pos.y);        
-        currentPos = pos;        
+        transform.position = new Vector3(pos.x, 0, pos.y);   
     }
 
 

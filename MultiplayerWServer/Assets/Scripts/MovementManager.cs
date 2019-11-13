@@ -14,7 +14,7 @@ public class MovementManager : MonoBehaviour
     private void Start()
     {
         walkableNodes = new List<Node>();
-        sprintableNodes = new List<Node>();
+        sprintableNodes = new List<Node>();        
     }
     public Node[] GetPath(Node start, Node goal)
     {
@@ -179,8 +179,8 @@ public class MovementManager : MonoBehaviour
             map.getCellFromNode(node).SetWalkableColor();            
         }
     }
-    public void DrawTurn1Movement(int team)
-    {
+    public void DrawTurn1Movement(int team, Node start)
+    {        
         Vector2 center = map.GetSpawnBaseSpawnPoint(team);
         center.x += team == 0 ? 1 : -1;
         List<Node> centerNodes = map.GetAllNodesInARange(map.GetNodeFromACoord(center), 5);
@@ -201,11 +201,12 @@ public class MovementManager : MonoBehaviour
         {
             walkableNodes.Add(node);
         }
-
         foreach (Node node in walkableNodes)
         {            
             map.getCellFromNode(node).SetWalkableColor();           
         }
+        startingNode = start;
+        map.getCellFromNode(startingNode).SetCurrentCellColor();
     }
     public void DrawMovementRangeWScore(Node start,int score)//recive player insted
     {

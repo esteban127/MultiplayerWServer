@@ -16,7 +16,7 @@ public class Server : SocketIOComponent
     [SerializeField] Lobby hostingLobby;
     [SerializeField] GameObject connectingW;
     [SerializeField] GameObject failedToConnectW;
-    GameDirector currentGameDirectror = null;
+    GameDirector currentGameDirector = null;
     ServerObjectManager serverObj;
     bool isHost = false;
     public bool IsHost { get { return isHost; } }
@@ -33,7 +33,7 @@ public class Server : SocketIOComponent
 
     public void SetGameDirector(GameDirector instance)
     {
-        currentGameDirectror = instance;
+        currentGameDirector = instance;
     }
 
     protected override void Awake()
@@ -64,6 +64,7 @@ public class Server : SocketIOComponent
     {
         base.Update();        
     }
+
     private void Hook()
     {
         On("open", (connect) =>
@@ -168,22 +169,41 @@ public class Server : SocketIOComponent
              ChangeScene("GameScene");
          }
         );
+        On("newTurn", (NewTurn) =>
+        {
+            currentGameDirector.NewTurn();
+        }
+        );
+        On("endTurn", (EndTurn) =>
+        {
+            currentGameDirector.EndOfTurn();
+        }
+        ); 
+        On("recieveActionData", (RecievedData) =>
+        {
+            CharacterActionData data = JsonUtility.FromJson<CharacterActionData>(RecievedData.data.ToString());
+            Debug.Log(data.id);
+            currentGameDirector.ReceiveActionToReplicate(data);
+        }
+        );
+        On("startActionTurn", (actions) =>
+        {
+            currentGameDirector.StartReplication();
+        }
+        ); 
     }
+
+    #region Emiters
 
     public void ReadyToEndTurn()
     {
-
+        Debug.Log("readyToEnd");
+        Emit("readyToEndTurn");
     }
-
-    public void JoinLobby()
-    {        
-        hostingLobby.Join(isHost);        
-    }
-    public void LeaveLobby()
+    public void SubmitAction(CharacterActionData data)
     {
-        hostingLobby.Leave();
-        isHost = false;
-        Close();
+        Debug.Log("Submit");
+        Emit("submitActionData", new JSONObject(JsonUtility.ToJson(data)));
     }
     public void KickPlayer(string kickId)
     {
@@ -195,6 +215,20 @@ public class Server : SocketIOComponent
     {
         Emit("closeLobby");
     }
+    public void StartGame()
+    {
+        Emit("gameHosted");
+        ChangeScene("GameScene");
+    }
+    public void ReplicationEnded()
+    {        
+        Emit("replicationEnded");        
+    }
+    #endregion
+
+
+
+    #region lobbyRelated
     public void SetName(string name)
     {
         playerName = name;
@@ -215,6 +249,16 @@ public class Server : SocketIOComponent
         SetSocket("ws://" + hostIP + ":" + port + "/socket.io/?EIO=4&transport=websocket");
         Connect();
         StartCoroutine(ConnectingToAnIP());        
+    }
+    public void JoinLobby()
+    {
+        hostingLobby.Join(isHost);
+    }
+    public void LeaveLobby()
+    {
+        hostingLobby.Leave();
+        isHost = false;
+        Close();
     }
 
     IEnumerator ConnectingToAnIP()
@@ -240,12 +284,8 @@ public class Server : SocketIOComponent
         connectingW.SetActive(false);
         failedToConnectW.SetActive(true);
     }
+    #endregion
 
-    public void StartGame()
-    {
-        Emit("gameHosted");
-        ChangeScene("GameScene");
-    }
     public void ChangeScene(string sceneName)
     {
         if (BeforeClosing != null)
@@ -277,7 +317,7 @@ public class Server : SocketIOComponent
     }
 
 }
-
+#region DataClasses
 [System.Serializable]
 class PlayerData
 {
@@ -288,6 +328,55 @@ class PlayerData
         position = new Vector3Data();
     }
 }
+
+[System.Serializable]
+public class CharacterActionData
+{
+    public string id;
+    public List<MovList> mov;
+    public List<string> prepSkills;
+    public List<string> dashSkills;
+    public List<string> acitonSkills;
+
+
+    public CharacterActionData()
+    {
+        mov = new List<MovList>();
+        prepSkills = new List<string>();
+        dashSkills = new List<string>();
+        acitonSkills = new List<string>();
+    }
+    public List<List<Vector2>> GetMov()
+    {
+        List<List<Vector2>> movToReturn = new List<List<Vector2>>();
+        List<Vector2> provitionalList;
+        foreach (MovList list in mov)
+        {
+            provitionalList = new List<Vector2>();
+            foreach (Vector2Data pos in list.list)
+            {
+                provitionalList.Add(new Vector2(pos.x, pos.y));
+            }
+            movToReturn.Add(provitionalList);
+        }
+        return movToReturn;
+    }
+    public void SetMov(List<List<Vector2>> newMovs)
+    {
+        mov= new List<MovList>();
+        MovList provitionalList;
+        foreach (List<Vector2> list in newMovs)
+        {
+            provitionalList = new MovList();
+            foreach (Vector2 pos in list)
+            {
+                provitionalList.list.Add(new Vector2Data(pos.x,pos.y));
+            }
+            mov.Add(provitionalList);
+        }
+    }
+}
+
 [System.Serializable]
 class SimpleMessage
 {
@@ -301,13 +390,22 @@ class Vector3Data
     public float z;
 }
 [System.Serializable]
-class MovData
+public class MovList
 {
-    public List<List<Vector2Data>> movs;
+    public MovList()
+    {
+        list = new List<Vector2Data>();
+    }
+    public List<Vector2Data> list;    
 }
 [System.Serializable]
-class Vector2Data
+public class Vector2Data
 {
+    public Vector2Data(float _x, float _y)
+    {
+        x = _x;
+        y = _y;
+    }
     public float x;
     public float y;
 }
@@ -331,3 +429,4 @@ class ServerObjectManager : MonoBehaviour
         return serverObjects[key];
     }
 }
+#endregion

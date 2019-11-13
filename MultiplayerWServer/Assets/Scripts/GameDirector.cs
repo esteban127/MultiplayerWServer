@@ -16,6 +16,13 @@ public enum CharacterAction
     cat3,
     mov
 }
+public enum SkillType
+{
+    mov,
+    prep,
+    dash,
+    action
+}
 
 public class GameDirector : MonoBehaviour
 {
@@ -26,6 +33,7 @@ public class GameDirector : MonoBehaviour
     [SerializeField] GameObject character0;
     [SerializeField] GameObject character1;
     [SerializeField] LineRenderer lineRenderer;
+    List<CharacterActionData> actionsToReplicate;
     List<List<Vector2>> mov;
     List<CharacterAction> actionLog;
     Node currentNode;
@@ -38,27 +46,32 @@ public class GameDirector : MonoBehaviour
     private void Start()
     {
         sv = Server.Instance;
+        sv.SetGameDirector(this);
         movManager = GetComponent<MovementManager>();
         GeneratePlayers();
         PositionCamera();
         Turn1();
-        mov = new List<List<Vector2>>();
+        mov = new List<List<Vector2>>();        
         actionLog = new List<CharacterAction>();
     }
 
     private void Turn1()
     {
+        actionsToReplicate = new List<CharacterActionData>();
         turn1 = true;
         currentNode = mapManager.GetNodeFromACoord(localCharacter.Pos);
-        movManager.DrawTurn1Movement(localCharacter.Team);        
+        movManager.DrawTurn1Movement(localCharacter.Team,currentNode);        
     }
 
-    private void NewTurn()
+    public void NewTurn()
     {
+        actionsToReplicate = new List<CharacterActionData>();
         localCharacter.ResetTurnValues();
         currentNode = mapManager.GetNodeFromACoord(localCharacter.Pos);
         currentMoveScore = localCharacter.MovScore;
         movManager.DrawMovementWalkableRange(currentNode,currentMoveScore);
+        DrawMov();
+        InputManager.inputEneable = true;
     }
 
     private void PositionCamera()
@@ -121,17 +134,41 @@ public class GameDirector : MonoBehaviour
         lineRenderer.SetPositions(positions.ToArray());
         
     }
+    public void ReceiveActionToReplicate(CharacterActionData data)
+    {        
+        actionsToReplicate.Add(data);
+    }
 
     public void SprintCommand(Node cell)
     {
         actionLog.Add(CharacterAction.mov);
     }
 
-    void EndOfTurn()
+    public void ReadyToEndTurn()
     {
+        sv.ReadyToEndTurn();
+        InputManager.inputEneable = false;
+    }
+
+    public void EndOfTurn()
+    {
+        Debug.Log("EndTurn");
         if (turn1)
             turn1 = false;
+
+        movManager.ResetFloorColor();
+        Submit();
+        actionLog = new List<CharacterAction>();
         mov = new List<List<Vector2>>();
+        
+    }
+
+    private void Submit()
+    {
+        CharacterActionData actionData = new CharacterActionData();
+        actionData.id = Server.id;
+        actionData.SetMov(mov);
+        sv.SubmitAction(actionData);
     }
 
     public void DeleteLastAction()
@@ -146,8 +183,11 @@ public class GameDirector : MonoBehaviour
                     currentNode = mapManager.GetNodeFromACoord(mov[mov.Count - 1][0]);
                     mov.RemoveAt(mov.Count - 1);
                     DrawMov();
-                    movManager.ResetFloorColor();
-                    movManager.DrawMovementWalkableRange(currentNode, currentMoveScore);
+                    if (!turn1)
+                    {
+                        movManager.ResetFloorColor();
+                        movManager.DrawMovementWalkableRange(currentNode, currentMoveScore);
+                    }
                     break;
             }
         }        
@@ -180,13 +220,19 @@ public class GameDirector : MonoBehaviour
 
     #region Replication
 
-    public void Replicate(List<CharacterActionData> actions)
+    public void StartReplication()
     {
-        foreach(CharacterActionData data in actions)
+       StartCoroutine(Replicate());
+    }
+    
+    IEnumerator Replicate()
+    {
+        foreach(CharacterActionData data in actionsToReplicate)
         {
             if (data.mov.Count > 0)
-                StartCoroutine(ReplicatedMove(data.mov, data.ID));
+                yield return StartCoroutine(ReplicatedMove(data.GetMov(), data.id));
         }
+        sv.ReplicationEnded();
     }
 
     IEnumerator ReplicatedMove(List<List<Vector2>> path, string id)
@@ -201,32 +247,19 @@ public class GameDirector : MonoBehaviour
                 nodes.Add(mapManager.GetNodeFromACoord(pos));
             }
         }
-        while(movingPlayer.MovScore> 10 && nodeCounter< nodes.Count)
+        while(movingPlayer.MovScore >= 10 && nodeCounter< nodes.Count)
         {
             //animationStuff
             yield return new WaitForSeconds(0.5f);
             movingPlayer.Move(nodes[nodeCounter].Pos);
             mapManager.getCellFromNode(nodes[nodeCounter]).CheckTrap(movingPlayer.Team); //shouldApplyTraps            
-            nodeCounter++;            
+            nodeCounter++;
+            GC.Collect();
         }
+        
     }
 
     #endregion
 }
 
-public class CharacterActionData
-{
-    string id;
-    public string ID { get { return id; } }
-    public List<List<Vector2>> mov;
-    public List<string> prepSkills;
-    public List<string> dashSkills;
-    public List<string> acitonSkills;
-    public CharacterActionData(string id)
-    {
-        mov = new List<List<Vector2>>();
-        prepSkills = new List<string>();
-        dashSkills = new List<string>();
-        acitonSkills = new List<string>();
-    }
-}
+
