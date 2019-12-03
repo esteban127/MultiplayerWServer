@@ -31,13 +31,18 @@ public class Cell : MonoBehaviour
     [SerializeField] Color walkableColor;
     [SerializeField] Color sprintableColor;
     [SerializeField] Color currentCell;
+    [SerializeField] Color abilityDamageAoE;
+    [SerializeField] Color abilityCastRange;
+    Color lastColor;
+    Vector2 pos;
+    public Vector2 Pos { get { return pos; } set { pos = value; } }
     //List<Traps> traps
     private void Awake()
     {
         materialInstance = gameObject.GetComponent<Renderer>().material;
         SetBaseColor();
     }
-    public void CheckTrap(int team)
+    public void CheckTrapAndBuffs(int team)
     {
         //shouldReturnTraps
     }
@@ -52,7 +57,12 @@ public class Cell : MonoBehaviour
         }        
     }
 
-    
+    public void NewTurn()
+    {
+        SetBaseColor();
+        //trapduruation--
+        //buffSpawn
+    }
 
     public void ClickedHighLight(bool clicked)
     {
@@ -77,6 +87,14 @@ public class Cell : MonoBehaviour
     {
         materialInstance.color = sprintableColor;
     }
+    public void SetAbilityCastRange()
+    {
+        materialInstance.color = abilityCastRange;
+    }
+    public void SetAbilityDamageAoE()
+    {
+        materialInstance.color = abilityDamageAoE;        
+    }    
 
 }
 public class Node

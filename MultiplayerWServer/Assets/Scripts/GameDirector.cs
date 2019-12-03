@@ -28,6 +28,7 @@ public class GameDirector : MonoBehaviour
 {
     [SerializeField] MapManager mapManager;
     MovementManager movManager;
+    AimSystem aim;
     Dictionary<string,GameObject> players;
     Server sv;
     [SerializeField] GameObject character0;
@@ -36,10 +37,14 @@ public class GameDirector : MonoBehaviour
     List<CharacterActionData> actionsToReplicate;
     List<List<Vector2>> mov;
     List<CharacterAction> actionLog;
+    Vector2 currentAim;
     Node currentNode;
     int currentMoveScore;
     Character localCharacter;
     bool turn1 = false;
+    public delegate void DirectorDelegate();
+    static public DirectorDelegate turnStart;
+
 
     #region Local
 
@@ -51,7 +56,8 @@ public class GameDirector : MonoBehaviour
         GeneratePlayers();
         PositionCamera();
         Turn1();
-        mov = new List<List<Vector2>>();        
+        mov = new List<List<Vector2>>();
+        aim = new AimSystem(mapManager);
         actionLog = new List<CharacterAction>();
     }
 
@@ -65,15 +71,15 @@ public class GameDirector : MonoBehaviour
 
     public void NewTurn()
     {
+        turnStart();
         actionsToReplicate = new List<CharacterActionData>();
-        localCharacter.ResetTurnValues();
         currentNode = mapManager.GetNodeFromACoord(localCharacter.Pos);
         currentMoveScore = localCharacter.MovScore;
-        movManager.DrawMovementWalkableRange(currentNode,currentMoveScore);
+        movManager.DrawMovementWalkableRange(currentNode,currentMoveScore,localCharacter.Team,true);
         DrawMov();
         InputManager.inputEneable = true;
     }
-
+    #region movement
     private void PositionCamera()
     {
         if (localCharacter.Team == 0)
@@ -87,7 +93,7 @@ public class GameDirector : MonoBehaviour
         if (turn1)
         {
             mov = new List<List<Vector2>>();
-            Node[] nodes = movManager.GetPath(currentNode, cell);
+            Node[] nodes = movManager.GetPath(currentNode, cell,localCharacter.Team,true);
             CurrentMov.Add(currentNode.Pos);
             for (int i = 0; i < nodes.Length; i++)
             {
@@ -110,7 +116,7 @@ public class GameDirector : MonoBehaviour
             currentNode = cell;
             currentMoveScore -= cell.g;
             movManager.ResetFloorColor();
-            movManager.DrawMovementWalkableRange(currentNode, currentMoveScore);
+            movManager.DrawMovementWalkableRange(currentNode, currentMoveScore,localCharacter.Team,true);
         }
 
         DrawMov();
@@ -134,15 +140,33 @@ public class GameDirector : MonoBehaviour
         lineRenderer.SetPositions(positions.ToArray());
         
     }
-    public void ReceiveActionToReplicate(CharacterActionData data)
-    {        
-        actionsToReplicate.Add(data);
-    }
 
     public void SprintCommand(Node cell)
     {
         actionLog.Add(CharacterAction.mov);
     }
+
+    #endregion
+
+    #region actions
+    public void Aiming(Vector2 aimingPos)//recive ability to know range and aiming type
+    {
+        currentAim = aimingPos;
+        movManager.DisableMovementDraw();
+        aim.PredictiveAim(localCharacter.Pos, aimingPos, 8, aimType.linear,localCharacter.Team,40);
+    }
+    public void ConfirmAim()
+    {
+        aim.RestoreFloorColors();
+        movManager.ReDrawMov(false);
+    }
+    public void CancelAim()
+    {
+        aim.RestoreFloorColors();
+        movManager.ReDrawMov(true);
+    }
+
+    #endregion
 
     public void ReadyToEndTurn()
     {
@@ -178,7 +202,7 @@ public class GameDirector : MonoBehaviour
             switch (actionLog[actionLog.Count - 1])
             {
                 case CharacterAction.mov:
-                    movManager.GetPath(mapManager.GetNodeFromACoord(mov[mov.Count - 1][0]), currentNode);
+                    movManager.GetPath(mapManager.GetNodeFromACoord(mov[mov.Count - 1][0]), currentNode,localCharacter.Team,true);
                     currentMoveScore = currentMoveScore + currentNode.g;
                     currentNode = mapManager.GetNodeFromACoord(mov[mov.Count - 1][0]);
                     mov.RemoveAt(mov.Count - 1);
@@ -186,7 +210,7 @@ public class GameDirector : MonoBehaviour
                     if (!turn1)
                     {
                         movManager.ResetFloorColor();
-                        movManager.DrawMovementWalkableRange(currentNode, currentMoveScore);
+                        movManager.DrawMovementWalkableRange(currentNode, currentMoveScore,localCharacter.Team,true);
                     }
                     break;
             }
@@ -209,54 +233,189 @@ public class GameDirector : MonoBehaviour
             newPlayer = team == 0? Instantiate(character0) : Instantiate(character1);           
             spawnPos = mapManager.GetSpawnBaseSpawnPoint(team);
             gap = (int)players.Count / 2;
-            spawnPos.y -= gap <= 2 ? -(gap % 2 + 1) : gap % 2 + 1;
+            spawnPos.y -= gap < 2 ? -(gap % 2 + 1) : (gap % 2 + 1);
             newPlayer.GetComponent<Character>().Spawn(spawnPos, team);
             if (id == Server.id)
                 localCharacter = newPlayer.GetComponent<Character>();
+            turnStart += newPlayer.GetComponent<Character>().NewTurn;
             players.Add(id,newPlayer);
+            mapManager.AddPlayer(newPlayer.GetComponent<Character>(), spawnPos);
         }
     }
-#endregion
+    #endregion
 
     #region Replication
 
+    public void ReceiveActionToReplicate(CharacterActionData data)
+    {
+        actionsToReplicate.Add(data);
+    }
+
     public void StartReplication()
     {
-       StartCoroutine(Replicate());
+        StartCoroutine(ReplicateActions());
+        
     }
     
-    IEnumerator Replicate()
+    IEnumerator ReplicateActions()
     {
-        foreach(CharacterActionData data in actionsToReplicate)
+        foreach (CharacterActionData data in actionsToReplicate)
         {
-            if (data.mov.Count > 0)
-                yield return StartCoroutine(ReplicatedMove(data.GetMov(), data.id));
+
+
+
+        }        
+        yield return StartCoroutine(ReplicatedMoves()); 
+    }
+
+    IEnumerator ReplicatedMoves()
+    {
+        List<Character> movingCharacters = new List<Character>();
+        List<List<Vector2>> movements = new List<List<Vector2>>();
+        List<Character> followingCharacters = new List<Character>();
+        List<string> followingTargetsID = new List<string>();
+        List<Cell> currentCellsToMove;
+        int charactersMoving = 0;
+        int movCounter = 0;
+        mapManager.ResetPlayersPos();
+        foreach (CharacterActionData data in actionsToReplicate)
+        {
+            if(data.mov != null)
+            {
+                charactersMoving++;
+                movingCharacters.Add(players[data.id].GetComponent<Character>());
+                movements.Add(data.GetMov());
+            }
+            else
+            {
+                if(data.followID!= null)
+                {
+                    followingCharacters.Add(players[data.id].GetComponent<Character>());
+                    followingTargetsID.Add(data.followID);
+                }
+                else
+                {
+                    mapManager.ActualziatePlayerPos(players[data.id].GetComponent<Character>(), players[data.id].GetComponent<Character>().Pos); 
+                }
+            }
         }
+        while (charactersMoving > 0)
+        {
+            currentCellsToMove = new List<Cell>();            
+            for (int i = 0; i < movingCharacters.Count; i++)
+            {
+                if (!movingCharacters[i].AlreadyMove)
+                {
+                    if (movingCharacters[i].MovScore >= 10 && movCounter < movements[i].Count && ((mapManager.GetCharacterByPos(movements[i][movCounter], false)==null || movCounter + 1 < movements[i].Count)))
+                    {                       
+                        movingCharacters[i].Move(movements[i][movCounter]);
+                        if (!currentCellsToMove.Contains(mapManager.GetCellFromCoord(movements[i][movCounter])))
+                        {
+                            currentCellsToMove.Add(mapManager.GetCellFromCoord(movements[i][movCounter]));
+                        }
+                        else
+                        {
+                            MovementConflict(movingCharacters[i], movingCharacters);
+                        }
+                    }
+                    else
+                    {
+                        movingCharacters[i].CellOwner = false;
+                    }
+                }                 
+            }
+            for (int i = 0; i < movingCharacters.Count; i++)
+            {
+                if (!movingCharacters[i].AlreadyMove)
+                {
+                    if (!movingCharacters[i].CellOwner)
+                    {
+                        MovementConflict(movingCharacters[i], movingCharacters);
+                    }
+                    if (movements[i].Count <= movCounter + 1 || movingCharacters[i].MovScore < 10)
+                    {
+                        if (movingCharacters[i].CellOwner)
+                        {
+                            movingCharacters[i].AlreadyMove = true;
+                            mapManager.ActualziatePlayerPos(movingCharacters[i], movingCharacters[i].Pos);
+                            charactersMoving--;
+                        }
+                    }
+                }                    
+            }
+            for (int i = 0; i < movingCharacters.Count; i++)
+            {
+                if (!movingCharacters[i].AlreadyMove)
+                {                    
+                    if (!movingCharacters[i].CellOwner && movements[i].Count <= movCounter)
+                    {
+                        int scoreRange = 15;
+                        Node lastNode = mapManager.GetNodeFromACoord(movingCharacters[i].LastPos);
+                        Node nextNode = mapManager.GetNodeFromACoord(movingCharacters[i].Pos + (movingCharacters[i].Pos - movingCharacters[i].LastPos));
+                        List<Node> neighborsNodes = new List<Node>();
+                        while (neighborsNodes.Count == 0)
+                        {
+                            neighborsNodes = movManager.GetAllNodesUnderAScore(mapManager.GetNodeFromACoord(movingCharacters[i].Pos), scoreRange,-1,false);
+                            scoreRange += 5;
+                        }
+                        if (neighborsNodes.Contains(lastNode))
+                        {
+                            movingCharacters[i].Move(lastNode.Pos);
+                        }
+                        else
+                        {
+                            if (neighborsNodes.Contains(nextNode))
+                            {
+                                movingCharacters[i].Move(nextNode.Pos);
+                            }
+                            else
+                            {
+                                movingCharacters[i].Move(neighborsNodes[0].Pos);
+                            }
+                        }
+                        movingCharacters[i].AlreadyMove = true;
+                        mapManager.ActualziatePlayerPos(movingCharacters[i], movingCharacters[i].Pos);
+                        charactersMoving--;
+                    }    
+                }
+            }
+            /*string Error, etrategicamente colocado para encontrar rapido donde quede. Falta apligar buffs y trampas, y los follows*/
+            movCounter++;
+            GC.Collect();
+            yield return new WaitForSeconds(0.5f);
+        }         
         sv.ReplicationEnded();
     }
 
-    IEnumerator ReplicatedMove(List<List<Vector2>> path, string id)
+    private void MovementConflict(Character currentCharacter, List<Character> movingCharacters)
     {
-        int nodeCounter = 0;
-        Character movingPlayer = players[id].GetComponent<Character>();        
-        List<Node> nodes = new List<Node>();
-        foreach(List<Vector2> list in path)
+        List<Character> conflictingCharacters = new List<Character>();
+        List<Character> tiedCharacters = new List<Character>();        
+        int lowestMovSpended = currentCharacter.movSpended;
+        foreach(Character character in movingCharacters)
         {
-            foreach (Vector2 pos in list)
+            if (character.Pos == currentCharacter.Pos) 
+                conflictingCharacters.Add(character);
+        }
+        foreach(Character character in conflictingCharacters)
+        {
+            character.CellOwner = false;
+            if(character.movSpended< lowestMovSpended)
             {
-                nodes.Add(mapManager.GetNodeFromACoord(pos));
+                tiedCharacters = new List<Character>();
+                tiedCharacters.Add(character);
+                lowestMovSpended = character.movSpended;
+            }
+            else
+            {
+                if (character.movSpended == lowestMovSpended)
+                    tiedCharacters.Add(character);
             }
         }
-        while(movingPlayer.MovScore >= 10 && nodeCounter< nodes.Count)
+        if(tiedCharacters.Count == 1)
         {
-            //animationStuff
-            yield return new WaitForSeconds(0.5f);
-            movingPlayer.Move(nodes[nodeCounter].Pos);
-            mapManager.getCellFromNode(nodes[nodeCounter]).CheckTrap(movingPlayer.Team); //shouldApplyTraps            
-            nodeCounter++;
-            GC.Collect();
+            tiedCharacters[0].CellOwner = true;
         }
-        
     }
 
     #endregion

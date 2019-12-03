@@ -8,6 +8,7 @@ public class MapManager : MonoBehaviour
 {
     GameObject[,] cells;
     Node[,] nodes;
+    Dictionary<Character, Vector2> characterPos;
     int size = 19;
     [SerializeField] GameObject cellPrefab;
 
@@ -16,13 +17,40 @@ public class MapManager : MonoBehaviour
     private void Awake()
     {
         GenerateMap();
+        characterPos = new Dictionary<Character, Vector2>();
+    }    
+
+    public void AddPlayer(Character player, Vector2 pos)
+    {
+        characterPos.Add(player, pos);
+    }
+    public void ActualziatePlayerPos(Character player, Vector2 pos)
+    {
+        characterPos[player] = pos;
+    }
+    public void ResetPlayersPos()
+    {
+        List<Character> keys = new List<Character>(characterPos.Keys);
+        foreach(Character key in keys)
+        {
+            characterPos[key] = new Vector2(-1, -1);
+        }
+    }
+    public Character GetCharacterByPos(Vector2 pos,bool onlyVisible)
+    {
+        foreach(Character player in characterPos.Keys)
+        {
+            if (characterPos[player] == pos && (player.Visible || !onlyVisible))
+                return player;
+        }
+        return null;
     }
 
     public void GenerateMap()
     {
         LoadJsonMap();
         cells = new GameObject[size, size];
-        nodes = new Node[size, size];
+        nodes = new Node[size, size];        
         List<CellType> totalTypes;
         bool walkeable;
         for (int i = 0; i < size; i++)
@@ -90,8 +118,10 @@ public class MapManager : MonoBehaviour
                     }
                 }     
                 cell.GetComponent<Cell>().cellType = totalTypes;
+                cell.GetComponent<Cell>().Pos = new Vector2(i, j);
                 nodes[i, j] = new Node(new Vector2(i, j), walkeable);
                 cell.name = (i + " , " + j);
+                GameDirector.turnStart += cell.GetComponent<Cell>().NewTurn;
                 cells[i, j] = cell;
             }
         }
@@ -115,7 +145,7 @@ public class MapManager : MonoBehaviour
         return neighbords;
     }
 
-    public List<Node> GetNeighborsNodes(Node currentNode)
+    public List<Node> GetNeighborsNodes(Node currentNode,int team, bool onlyVisible)
     {
         List<Node> neighbords = new List<Node>();
         Vector2 coord = currentNode.Pos;
@@ -130,6 +160,33 @@ public class MapManager : MonoBehaviour
                 if(Mathf.Abs(i) == 1 && Mathf.Abs(j) == 1)
                 {
                     if (CheckAvialableNode(x-i, y)&& CheckAvialableNode(x, y-j))
+                        if (CheckAvialableNode(x, y,team,onlyVisible))
+                            neighbords.Add(nodes[x, y]);
+                }
+                else
+                {
+                    if (CheckAvialableNode(x, y,team,onlyVisible))
+                        neighbords.Add(nodes[x, y]);
+                }                
+            }
+        }
+        return neighbords;
+    }
+    public List<Node> GetNeighborsNodes(Node currentNode)
+    {
+        List<Node> neighbords = new List<Node>();
+        Vector2 coord = currentNode.Pos;
+        int x;
+        int y;
+        for (int i = -1; i <= 1; i++)
+        {
+            x = (int)coord.x + i;
+            for (int j = -1; j <= 1; j++)
+            {
+                y = (int)coord.y + j;
+                if (Mathf.Abs(i) == 1 && Mathf.Abs(j) == 1)
+                {
+                    if (CheckAvialableNode(x - i, y) && CheckAvialableNode(x, y - j))
                         if (CheckAvialableNode(x, y))
                             neighbords.Add(nodes[x, y]);
                 }
@@ -137,19 +194,35 @@ public class MapManager : MonoBehaviour
                 {
                     if (CheckAvialableNode(x, y))
                         neighbords.Add(nodes[x, y]);
-                }                
+                }
             }
         }
         return neighbords;
     }
-    public bool CheckAvialableNode(int posX,int posY)
+
+    public bool CheckAvialableNode(int posX, int posY)
     {
         if (posX >= 0 && posY >= 0 && posX <= size - 1 && posY <= size - 1)
         {
-            return nodes[posX, posY].Walkable;            
+            return nodes[posX, posY].Walkable;
         }
         return false;
     }
+    public bool CheckAvialableNode(int posX,int posY, int team, bool onlyVisible)
+    {
+        if (posX >= 0 && posY >= 0 && posX <= size - 1 && posY <= size - 1)
+        {
+            Character character = GetCharacterByPos(new Vector2(posX, posY), onlyVisible);
+            if (character != null)
+            {
+                bool alied = character.Team == team;
+                return nodes[posX, posY].Walkable && alied;
+            }
+            else return nodes[posX, posY].Walkable;
+        }
+        return false;
+    }
+    
 
     private void LoadJsonMap()
     {
@@ -197,7 +270,14 @@ public class MapManager : MonoBehaviour
             return cells[(int)pos.x, (int)pos.z].GetComponent<Cell>();
 
 
-        Debug.LogError("there is no cell for the pos" + (int)pos.x + ", " + (int)pos.y);
+        Debug.LogError("there is no cell for the pos" + (int)pos.x + ", " + (int)pos.z);
+        return null;
+    }
+    public Cell GetCellFromCoord(Vector2 coord)
+    {
+        if (coord.x >= 0 && coord.x < size && coord.y >= 0 && coord.y < size)
+            return cells[(int)coord.x, (int)coord.y].GetComponent<Cell>();
+        
         return null;
     }
     public Node GetNodeFromWorldPosition(Vector3 pos)

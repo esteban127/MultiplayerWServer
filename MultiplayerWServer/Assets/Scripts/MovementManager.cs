@@ -16,9 +16,9 @@ public class MovementManager : MonoBehaviour
         walkableNodes = new List<Node>();
         sprintableNodes = new List<Node>();        
     }
-    public Node[] GetPath(Node start, Node goal)
+    public Node[] GetPath(Node start, Node goal,int team, bool onlyVisible)
     {
-        if (FindPath(goal, start))
+        if (FindPath(goal, start,team,onlyVisible))
         {
             return path;
         }
@@ -26,7 +26,7 @@ public class MovementManager : MonoBehaviour
             return null;
 
     }
-    public List<Node> GetAllNodesUnderAScore(Node start,int maxScore)
+    public List<Node> GetAllNodesUnderAScore(Node start,int maxScore, int team, bool onlyVisible)
     {
         Node startingNode = start;
         List<Node> availableNodes = new List<Node>();
@@ -43,7 +43,7 @@ public class MovementManager : MonoBehaviour
             availableNodes.Remove(currentNode);
             closedNodes.Add(currentNode);                               
 
-            currentNeighbords = map.GetNeighborsNodes(currentNode);
+            currentNeighbords = map.GetNeighborsNodes(currentNode,team,onlyVisible);
 
             for (int i = 0; i < currentNeighbords.Count; i++)
             {
@@ -69,10 +69,53 @@ public class MovementManager : MonoBehaviour
         closedNodes.Remove(start);
         return closedNodes;
     }
-
-    public List<Node> GetAllNodesBetweenScores(Node start, int minScore, int maxScore)
+    public List<Node> GetAllNodesUnderAScore(Node start, int maxScore)
     {
-        List<Node> totalNodes = GetAllNodesUnderAScore(start, maxScore);
+        Node startingNode = start;
+        List<Node> availableNodes = new List<Node>();
+        List<Node> closedNodes = new List<Node>();
+        availableNodes.Add(startingNode);
+        Node currentNode = startingNode;
+        currentNode.CalculateOnlyG(startingNode);
+        List<Node> currentNeighbords;
+
+        while (availableNodes.Count > 0)
+        {
+            currentNode = availableNodes[0];
+
+            availableNodes.Remove(currentNode);
+            closedNodes.Add(currentNode);
+
+            currentNeighbords = map.GetNeighborsNodes(currentNode);
+
+            for (int i = 0; i < currentNeighbords.Count; i++)
+            {
+                if (availableNodes.Contains(currentNeighbords[i]))
+                {
+                    Node lastNode = currentNeighbords[i].Parent;
+                    int neighbordG = currentNeighbords[i].g;
+                    currentNeighbords[i].CalculateOnlyG(currentNode);
+                    if (currentNeighbords[i].g > neighbordG)
+                    {
+                        currentNeighbords[i].CalculateOnlyG(lastNode);
+                    }
+                }
+                else if (!closedNodes.Contains(currentNeighbords[i]))
+                {
+                    currentNeighbords[i].CalculateOnlyG(currentNode);
+                    if (currentNeighbords[i].g <= maxScore)
+                        availableNodes.Add(currentNeighbords[i]);
+                }
+            }
+
+        }
+        closedNodes.Remove(start);
+        return closedNodes;
+    }
+
+    public List<Node> GetAllNodesBetweenScores(Node start, int minScore, int maxScore, int team, bool onlyVisible)
+    {
+        List<Node> totalNodes = GetAllNodesUnderAScore(start, maxScore,team,onlyVisible);
         List<Node> finalNodes = new List<Node>();
         foreach(Node node in totalNodes)
         {
@@ -83,7 +126,7 @@ public class MovementManager : MonoBehaviour
         }
         return finalNodes;
     }
-    bool FindPath(Node objetiveNode, Node startingNode)
+    bool FindPath(Node objetiveNode, Node startingNode, int team, bool onlyVisible)
     {
         List<Node> availableNodes = new List<Node>();
         List<Node> closedNodes = new List<Node>();
@@ -120,7 +163,7 @@ public class MovementManager : MonoBehaviour
 
             }
 
-            currentNeighbords = map.GetNeighborsNodes(currentNode);
+            currentNeighbords = map.GetNeighborsNodes(currentNode,team, onlyVisible);
 
             for (int i = 0; i < currentNeighbords.Count; i++)
             {
@@ -160,18 +203,44 @@ public class MovementManager : MonoBehaviour
             path[path.Length - (i + 1)] = provitionalList[i];
         }
     }
-
-    public void DrawMovementSprintRange(Node start, int sprintScore, int walkableScore)
+    public void DisableMovementDraw()
     {
-        sprintableNodes = GetAllNodesBetweenScores(start, walkableScore, sprintScore);
+        foreach (Node node in walkableNodes)
+        {
+            map.getCellFromNode(node).SetBaseColor();
+        }
+        foreach (Node node in sprintableNodes)
+        {
+            map.getCellFromNode(node).SetBaseColor();
+        }
+    }
+    public void ReDrawMov(bool withSprint)
+    {
+        foreach (Node node in walkableNodes)
+        {
+            map.getCellFromNode(node).SetWalkableColor();
+        }
+        if (withSprint)
+        {
+            foreach (Node node in sprintableNodes)
+            {
+                map.getCellFromNode(node).SetSprintableColor();
+            }
+        }
+    }
+
+
+    public void DrawMovementSprintRange(Node start, int sprintScore, int walkableScore,int team, bool onlyVisible)
+    {
+        sprintableNodes = GetAllNodesBetweenScores(start, walkableScore, sprintScore,team,onlyVisible);
         foreach(Node node in sprintableNodes)
         {
             map.getCellFromNode(node).SetSprintableColor();            
         }
     }
-    public void DrawMovementWalkableRange(Node start, int walkableScore)
+    public void DrawMovementWalkableRange(Node start, int walkableScore,int team, bool onlyVisible)
     {
-        walkableNodes = GetAllNodesUnderAScore(start, walkableScore);
+        walkableNodes = GetAllNodesUnderAScore(start, walkableScore,team,onlyVisible);
         startingNode = start;
         map.getCellFromNode(start).SetCurrentCellColor();
         foreach (Node node in walkableNodes)
@@ -208,14 +277,14 @@ public class MovementManager : MonoBehaviour
         startingNode = start;
         map.getCellFromNode(startingNode).SetCurrentCellColor();
     }
-    public void DrawMovementRangeWScore(Node start,int score)//recive player insted
+    public void DrawMovementRangeWScore(Node start,int score,int team, bool onlyVisible)
     {
-        walkableNodes = GetAllNodesUnderAScore(start, score);
+        walkableNodes = GetAllNodesUnderAScore(start, score,team, onlyVisible);
         foreach (Node node in walkableNodes)
         {                
             map.getCellFromNode(node).SetWalkableColor();                
         }
-    }
+    }    
     public void ResetFloorColor()
     {
         map.getCellFromNode(startingNode).SetBaseColor();

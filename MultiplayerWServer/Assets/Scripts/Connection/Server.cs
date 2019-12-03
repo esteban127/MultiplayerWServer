@@ -334,6 +334,7 @@ public class CharacterActionData
 {
     public string id;
     public List<MovList> mov;
+    public string followID;
     public List<string> prepSkills;
     public List<string> dashSkills;
     public List<string> acitonSkills;
@@ -346,18 +347,21 @@ public class CharacterActionData
         dashSkills = new List<string>();
         acitonSkills = new List<string>();
     }
-    public List<List<Vector2>> GetMov()
+    public List<Vector2> GetMov()
     {
-        List<List<Vector2>> movToReturn = new List<List<Vector2>>();
-        List<Vector2> provitionalList;
+        List<Vector2> movToReturn = new List<Vector2>();
+        Vector2 lastvector = new Vector2(-1,-1);
         foreach (MovList list in mov)
         {
-            provitionalList = new List<Vector2>();
             foreach (Vector2Data pos in list.list)
             {
-                provitionalList.Add(new Vector2(pos.x, pos.y));
+                if(pos.x != lastvector.x || pos.y != lastvector.y)
+                {
+                    movToReturn.Add(new Vector2(pos.x, pos.y));
+                    lastvector.x = pos.x;
+                    lastvector.y = pos.y;
+                }                
             }
-            movToReturn.Add(provitionalList);
         }
         return movToReturn;
     }
