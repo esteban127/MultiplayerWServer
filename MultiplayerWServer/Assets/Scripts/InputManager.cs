@@ -7,20 +7,21 @@ public class InputManager : MonoBehaviour
 {
     GameObject lastCell;
     GameObject lastCellClicked;
+    GameObject characterOnMause;
+    GameObject characterClicked;
     Transform cameraTransform;
     float cameraSpeed = 20f;
-    MovementManager movementMan;
     GameDirector gameDirector;
     
     [SerializeField] MapManager map;    
     public static bool inputEneable = true;
 
     bool aimingAbility = false;
+    public bool AimingAbility { set { aimingAbility = value; } }
 
     private void Start()
     {
         cameraTransform = Camera.main.transform;
-        movementMan = GetComponent<MovementManager>();
         gameDirector = GetComponent<GameDirector>();
     }
 
@@ -28,29 +29,62 @@ public class InputManager : MonoBehaviour
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
-        Debug.DrawRay(ray.origin,ray.direction * 50f, Color.red);
-        int layer_mask = LayerMask.GetMask("Cells");        
+        int layer_mask = LayerMask.GetMask("Characters");
         if (Physics.Raycast(ray, out hit, 50f, layer_mask))
         {
+            if (lastCell != null)
+                lastCell.GetComponent<Cell>().HighLight(false);
+
             if (aimingAbility)
             {
-                gameDirector.Aiming(new Vector2 (hit.point.x,hit.point.z));
+                gameDirector.Aiming(new Vector2(hit.point.x, hit.point.z));
             }
             else
             {
-                if (lastCell != hit.transform.gameObject)
+                if (characterOnMause != hit.transform.gameObject)
                 {
-                    if (lastCell != null)
-                        lastCell.GetComponent<Cell>().HighLight(false);
-                    lastCell = hit.transform.gameObject;
-                    lastCell.GetComponent<Cell>().HighLight(true);
+                    if (characterOnMause != null)
+                    {
+                        //characterOnMause.GetComponent<Cell>().HighLight(false);
+                    }
+                    characterOnMause = hit.transform.gameObject;
+                    //characterOnMause.GetComponent<Cell>().HighLight(true);
                 }
-            }            
+            }
+        }
+        else
+        {
+            characterOnMause = null;
+        }
+        if(characterOnMause == null)
+        {
+            layer_mask = LayerMask.GetMask("Cells");
+            if (Physics.Raycast(ray, out hit, 50f, layer_mask))
+            {
+                if (aimingAbility)
+                {
+                    gameDirector.Aiming(new Vector2(hit.point.x, hit.point.z));
+                }
+                else
+                {
+                    if (lastCell != hit.transform.gameObject)
+                    {
+                        if (lastCell != null)
+                            lastCell.GetComponent<Cell>().HighLight(false);
+                        lastCell = hit.transform.gameObject;
+                        lastCell.GetComponent<Cell>().HighLight(true);
+                    }
+                }
+            }
+            else
+            {
+                lastCell = null;
+            }
         }
         else
         {
             lastCell = null;
-        }      
+        }
 
     }
     private void Update()
@@ -64,6 +98,11 @@ public class InputManager : MonoBehaviour
                     lastCellClicked = lastCell;
                     lastCellClicked.GetComponent<Cell>().ClickedHighLight(true);
                 }
+                if (characterOnMause != null && !aimingAbility)
+                {
+                    characterClicked = characterOnMause;
+                    //characterClicked.GetComponent<Cell>().ClickedHighLight(true);
+                }
             }
             if (Input.GetMouseButtonUp(0)) //cellReleased
             {
@@ -72,22 +111,23 @@ public class InputManager : MonoBehaviour
                     gameDirector.ConfirmAim();
                 }
                 else
-                {
+                {                
+
                     if (lastCellClicked != null)
                     {
                         lastCellClicked.GetComponent<Cell>().ClickedHighLight(false);
                         if (lastCellClicked == lastCell)
                             lastCell.GetComponent<Cell>().HighLight(true);
-                        Node currentNode = map.GetNodeFromWorldPosition(lastCellClicked.transform.position);
-                        if (movementMan.WalkableNode(currentNode))
-                        {
-                            gameDirector.MovCommand(currentNode);
-                        }
-                        else if (movementMan.SprintableNode(currentNode))
-                        {
-                            gameDirector.SprintCommand(currentNode);
-                        }
+                        Node currentNode = map.GetNodeFromWorldPosition(lastCellClicked.transform.position);                        
+                        gameDirector.MovCommand(currentNode);                        
                         lastCellClicked = null;
+                    }
+                    else
+                    {
+                        if (characterClicked != null)
+                        {
+                            gameDirector.CharacterClicked(characterClicked);
+                        }
                     }
                 }                         
             }
@@ -109,13 +149,43 @@ public class InputManager : MonoBehaviour
             }
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
-                aimingAbility = true;
+                SelectAbility(0);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                SelectAbility(1);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha3))
+            {
+                SelectAbility(2);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha4))
+            {
+                SelectAbility(3);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha5))
+            {
+                SelectAbility(4);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha6))
+            {
+                SelectAbility(5);
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha7))
+            {
+                SelectAbility(6);
             }
         }
 
         CameraImputs();              
         
     }
+
+    public void SelectAbility(int abilitySlot)
+    {
+        aimingAbility = gameDirector.SelectAbility(abilitySlot);
+    }
+
 
     private void CameraImputs()
     {

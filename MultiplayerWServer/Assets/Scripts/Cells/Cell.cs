@@ -4,13 +4,14 @@ using UnityEngine;
 
 public enum CellType
 {
+    Invalid,
     Block,
     BuffEnergize,
     BuffHaste,
     BuffHeal,
     BuffMight,
     Empty,
-    Fog,    
+    FogBush,    
     Unwalkable,
     Wcover,
     Ncover,
@@ -26,7 +27,17 @@ public class Cell : MonoBehaviour
 {
     public List<CellType> cellType;
     Material materialInstance;
+    Material fogMateria;
+    Material buffMaterial;    
     bool beingClicked = false;
+    [SerializeField] GameObject fog;
+    [SerializeField] GameObject buff;
+    [SerializeField] Color fogColor;
+    [SerializeField] Color bushFogColor;
+    [SerializeField] Color buffHealColor;
+    [SerializeField] Color buffHasteColor;
+    [SerializeField] Color buffEnergizeColor;
+    [SerializeField] Color buffMightColor;
     [SerializeField] Color baseColor;
     [SerializeField] Color walkableColor;
     [SerializeField] Color sprintableColor;
@@ -34,17 +45,48 @@ public class Cell : MonoBehaviour
     [SerializeField] Color abilityDamageAoE;
     [SerializeField] Color abilityCastRange;
     Color lastColor;
+    bool visible_0 = false;
+    public bool Visible_0 { get { return visible_0; } }
+    bool visible_1 = false;
+    public bool Visible_1 { get { return visible_1; } }
+    bool bushActive = true;
     Vector2 pos;
     public Vector2 Pos { get { return pos; } set { pos = value; } }
     //List<Traps> traps
     private void Awake()
     {
         materialInstance = gameObject.GetComponent<Renderer>().material;
+        fogMateria = fog.GetComponent<Renderer>().material;
+        buffMaterial = buff.GetComponent<Renderer>().material;
         SetBaseColor();
     }
-    public void CheckTrapAndBuffs(int team)
+    public void SetVisible(bool isVisible, int team, bool toggleFog)
+    {
+        if (toggleFog)
+        {
+            fog.SetActive(!isVisible);
+        }
+        if(team == 0)
+        {
+            visible_0 = isVisible;
+        }
+        else
+        {
+            visible_1 = isVisible;
+        }
+    }
+    public bool IsAValidBush()
+    {
+        return cellType.Contains(CellType.FogBush) && bushActive;
+    }
+    public void CheckTraps(int team)
     {
         //shouldReturnTraps
+    }
+    public statusType CheckBuffs(int team)
+    {
+        //shouldReturnBuffs
+        return 0; 
     }
 
     public void HighLight(bool highlighted)
@@ -95,6 +137,10 @@ public class Cell : MonoBehaviour
     {
         materialInstance.color = abilityDamageAoE;        
     }    
+    public void SetBushFogColor()
+    {
+        fogMateria.color = bushFogColor;
+    }
 
 }
 public class Node

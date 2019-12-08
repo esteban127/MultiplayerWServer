@@ -1,5 +1,67 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &368981822993661406
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7679397302038679010}
+  - component: {fileID: 5147375477134115207}
+  m_Layer: 0
+  m_Name: Ability1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7679397302038679010
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 368981822993661406}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 778998144979383224}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5147375477134115207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 368981822993661406}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef44b826714a9e841a50660d26e0ec71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityName: STALKER SUIT
+  cooldown: 6
+  cost: 0
+  type: 0
+  aim: 3
+  tags: 02000000
+  statusToApply:
+  - type: 4
+    duration: 2
+  range0: 0
+  range1: 0
+  thickness: 0
+  duration: 0
+  energyCost: 0
+  energyProduced: 0
+  damage0: 0
+  damate1: 0
+  damage2: 0
+  icon: {fileID: 0}
 --- !u!1 &778998144979383206
 GameObject:
   m_ObjectHideFlags: 0
@@ -29,6 +91,14 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 501700533713477030}
+  - {fileID: 4158844622316666342}
+  - {fileID: 7679397302038679010}
+  - {fileID: 797328093398235634}
+  - {fileID: 3562133358173916501}
+  - {fileID: 5108701481973590877}
+  - {fileID: 4324688351147645193}
+  - {fileID: 7328684154567684667}
+  - {fileID: 670875019295116949}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -44,6 +114,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4776fe82cadaeb4f9b48a87ef750d9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ability0: {fileID: 4995258675751407831}
+  ability1: {fileID: 5147375477134115207}
+  ability2: {fileID: 1130235329951846488}
+  ability3: {fileID: 3254773957033820900}
+  ultimate: {fileID: 7782763973266383046}
+  catalyzer0: {fileID: 3811842944933769539}
+  catalyzer1: {fileID: 5658862432382034281}
+  catalyzer2: {fileID: 2871981399910747982}
+  movSpended: 0
+  model: {fileID: 1234264370349607027}
   maxHealth: 60
 --- !u!1 &1234264370349607027
 GameObject:
@@ -57,8 +137,8 @@ GameObject:
   - component: {fileID: 4128845889781027772}
   - component: {fileID: 2726575413087532117}
   - component: {fileID: 4300872519504549694}
-  m_Layer: 0
-  m_Name: Capsule
+  m_Layer: 10
+  m_Name: Model
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -137,3 +217,427 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &2810357425847096300
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5108701481973590877}
+  - component: {fileID: 7782763973266383046}
+  m_Layer: 0
+  m_Name: Ultimate
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5108701481973590877
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2810357425847096300}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 778998144979383224}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7782763973266383046
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2810357425847096300}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef44b826714a9e841a50660d26e0ec71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityName: FUSION PULSE
+  cooldown: 0
+  cost: 1
+  type: 2
+  aim: 4
+  tags: 0000000005000000
+  statusToApply: []
+  range0: 9
+  range1: 0
+  thickness: 1
+  duration: 0
+  energyCost: 100
+  energyProduced: 0
+  damage0: 50
+  damate1: 0
+  damage2: 0
+  icon: {fileID: 0}
+--- !u!1 &3053085405513834583
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4158844622316666342}
+  - component: {fileID: 4995258675751407831}
+  m_Layer: 0
+  m_Name: Ability0
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4158844622316666342
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3053085405513834583}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 778998144979383224}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4995258675751407831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3053085405513834583}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef44b826714a9e841a50660d26e0ec71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityName: HEADSHOT
+  cooldown: 0
+  cost: 1
+  type: 2
+  aim: 0
+  tags: 
+  statusToApply: []
+  range0: 10
+  range1: 0
+  thickness: 0.2
+  duration: 0
+  energyCost: 0
+  energyProduced: 12
+  damage0: 34
+  damate1: 0
+  damage2: 0
+  icon: {fileID: 0}
+--- !u!1 &3132161663164517108
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7328684154567684667}
+  - component: {fileID: 5658862432382034281}
+  m_Layer: 0
+  m_Name: Catalyzer1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7328684154567684667
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3132161663164517108}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 778998144979383224}
+  m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5658862432382034281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3132161663164517108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef44b826714a9e841a50660d26e0ec71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityName: RELOCATE
+  cooldown: 0
+  cost: 2
+  type: 1
+  aim: 2
+  tags: 0100000005000000
+  statusToApply: []
+  range0: 44
+  range1: 0
+  thickness: 0
+  duration: 0
+  energyCost: 0
+  energyProduced: 0
+  damage0: 0
+  damate1: 0
+  damage2: 0
+  icon: {fileID: 0}
+--- !u!1 &3661980817161759296
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3562133358173916501}
+  - component: {fileID: 3254773957033820900}
+  m_Layer: 0
+  m_Name: Ability3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3562133358173916501
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3661980817161759296}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 778998144979383224}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3254773957033820900
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3661980817161759296}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef44b826714a9e841a50660d26e0ec71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityName: VORTEX ROUND
+  cooldown: 6
+  cost: 1
+  type: 2
+  aim: 0
+  tags: 0300000007000000
+  statusToApply: []
+  range0: 0
+  range1: 2.5
+  thickness: 0.4
+  duration: 0
+  energyCost: 0
+  energyProduced: 8
+  damage0: 30
+  damate1: 20
+  damage2: 0
+  icon: {fileID: 0}
+--- !u!1 &4278560448493579418
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 797328093398235634}
+  - component: {fileID: 1130235329951846488}
+  m_Layer: 0
+  m_Name: Ability2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &797328093398235634
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4278560448493579418}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 778998144979383224}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1130235329951846488
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4278560448493579418}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef44b826714a9e841a50660d26e0ec71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityName: OVERWATCH DRONE
+  cooldown: 3
+  cost: 1
+  type: 2
+  aim: 0
+  tags: 0600000008000000
+  statusToApply: []
+  range0: 9
+  range1: 0
+  thickness: 0
+  duration: 2
+  energyCost: 0
+  energyProduced: 10
+  damage0: 30
+  damate1: 0
+  damage2: 0
+  icon: {fileID: 0}
+--- !u!1 &5107793761904956565
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4324688351147645193}
+  - component: {fileID: 3811842944933769539}
+  m_Layer: 0
+  m_Name: Catalyzer0
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4324688351147645193
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5107793761904956565}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 778998144979383224}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3811842944933769539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5107793761904956565}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef44b826714a9e841a50660d26e0ec71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityName: MIGHT
+  cooldown: 0
+  cost: 0
+  type: 0
+  aim: 3
+  tags: 0100000002000000
+  statusToApply:
+  - type: 0
+    duration: 1
+  range0: 0
+  range1: 0
+  thickness: 0
+  duration: 0
+  energyCost: 0
+  energyProduced: 0
+  damage0: 0
+  damate1: 0
+  damage2: 0
+  icon: {fileID: 0}
+--- !u!1 &6178922512565278222
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 670875019295116949}
+  - component: {fileID: 2871981399910747982}
+  m_Layer: 0
+  m_Name: Catalyzer2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &670875019295116949
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6178922512565278222}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 778998144979383224}
+  m_RootOrder: 8
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2871981399910747982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6178922512565278222}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef44b826714a9e841a50660d26e0ec71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  abilityName: REGENERATION
+  cooldown: 0
+  cost: 1
+  type: 0
+  aim: 3
+  tags: 0100000002000000
+  statusToApply:
+  - type: 5
+    duration: 2
+  range0: 0
+  range1: 0
+  thickness: 0
+  duration: 0
+  energyCost: 0
+  energyProduced: 0
+  damage0: 0
+  damate1: 0
+  damage2: 0
+  icon: {fileID: 0}

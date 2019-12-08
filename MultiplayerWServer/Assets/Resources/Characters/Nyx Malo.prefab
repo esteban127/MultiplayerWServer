@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   movSpended: 0
+  model: {fileID: 1234264370349607027}
   maxHealth: 60
 --- !u!1 &1234264370349607027
 GameObject:
@@ -58,7 +59,7 @@ GameObject:
   - component: {fileID: 4128845889781027772}
   - component: {fileID: 2726575413087532117}
   - component: {fileID: 4300872519504549694}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Capsule
   m_TagString: Untagged
   m_Icon: {fileID: 0}

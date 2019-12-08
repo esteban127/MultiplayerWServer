@@ -9,6 +9,7 @@ public class MapManager : MonoBehaviour
     GameObject[,] cells;
     Node[,] nodes;
     Dictionary<Character, Vector2> characterPos;
+    List<List<Cell>> bushSections;
     int size = 19;
     [SerializeField] GameObject cellPrefab;
 
@@ -16,52 +17,28 @@ public class MapManager : MonoBehaviour
 
     private void Awake()
     {
-        GenerateMap();
         characterPos = new Dictionary<Character, Vector2>();
-    }    
-
-    public void AddPlayer(Character player, Vector2 pos)
-    {
-        characterPos.Add(player, pos);
-    }
-    public void ActualziatePlayerPos(Character player, Vector2 pos)
-    {
-        characterPos[player] = pos;
-    }
-    public void ResetPlayersPos()
-    {
-        List<Character> keys = new List<Character>(characterPos.Keys);
-        foreach(Character key in keys)
-        {
-            characterPos[key] = new Vector2(-1, -1);
-        }
-    }
-    public Character GetCharacterByPos(Vector2 pos,bool onlyVisible)
-    {
-        foreach(Character player in characterPos.Keys)
-        {
-            if (characterPos[player] == pos && (player.Visible || !onlyVisible))
-                return player;
-        }
-        return null;
+        bushSections = new List<List<Cell>>();
+        GenerateMap();
     }
 
     public void GenerateMap()
     {
         LoadJsonMap();
         cells = new GameObject[size, size];
-        nodes = new Node[size, size];        
+        nodes = new Node[size, size];
         List<CellType> totalTypes;
         bool walkeable;
         for (int i = 0; i < size; i++)
         {
             for (int j = 0; j < size; j++)
-            {        
+            {
                 GameObject cell = Instantiate(cellPrefab, new Vector3(i, 0, j), new Quaternion(), transform);
+                cell.GetComponent<Cell>().Pos = new Vector2(i, j);
                 totalTypes = new List<CellType>();
                 string[] info = cellInfo[i, j].Split(new char[] { '-' });
                 walkeable = true;
-                foreach(string type in info)
+                foreach (string type in info)
                 {
                     switch (type)
                     {
@@ -85,7 +62,9 @@ public class MapManager : MonoBehaviour
                             totalTypes.Add(CellType.Empty);
                             break;
                         case "f":
-                            totalTypes.Add(CellType.Fog);
+                            totalTypes.Add(CellType.FogBush);
+                            AddBush(cell.GetComponent<Cell>());
+                            cell.GetComponent<Cell>().SetBushFogColor();
                             break;
                         case "u":
                             totalTypes.Add(CellType.Unwalkable);
@@ -116,9 +95,8 @@ public class MapManager : MonoBehaviour
                             totalTypes.Add(CellType.Sblock);
                             break;
                     }
-                }     
+                }
                 cell.GetComponent<Cell>().cellType = totalTypes;
-                cell.GetComponent<Cell>().Pos = new Vector2(i, j);
                 nodes[i, j] = new Node(new Vector2(i, j), walkeable);
                 cell.name = (i + " , " + j);
                 GameDirector.turnStart += cell.GetComponent<Cell>().NewTurn;
@@ -126,6 +104,25 @@ public class MapManager : MonoBehaviour
             }
         }
     }
+
+    private void AddBush(Cell cell)
+    {
+        foreach(List<Cell> section in bushSections)
+        {
+            foreach(Cell bushCell in section)
+            {
+                if((bushCell.Pos - cell.Pos).magnitude == 1)
+                {
+                    section.Add(cell);
+                    return;
+                }
+            }
+        }
+        List<Cell> newSection = new List<Cell>();
+        newSection.Add(cell);
+        bushSections.Add(newSection);
+    }
+
     public List<Node> GetAllNodesInARange(Node currentNode, int range)
     {
         List<Node> neighbords = new List<Node>();
@@ -145,7 +142,36 @@ public class MapManager : MonoBehaviour
         return neighbords;
     }
 
-    public List<Node> GetNeighborsNodes(Node currentNode,int team, bool onlyVisible)
+
+    public void AddPlayer(Character player, Vector2 pos)
+    {
+        characterPos.Add(player, pos);
+    }
+    public void ActualziatePlayerPos(Character player, Vector2 pos)
+    {
+        characterPos[player] = pos;
+    }
+    public void ResetPlayersPos()
+    {
+        List<Character> keys = new List<Character>(characterPos.Keys);
+        foreach(Character key in keys)
+        {
+            characterPos[key] = new Vector2(-1, -1);
+        }
+    }
+    public Character GetCharacterByPos(Vector2 pos,bool onlyVisible)
+    {
+        foreach(Character player in characterPos.Keys)
+        {
+            if (characterPos[player] == pos && (player.Visible || !onlyVisible))
+                return player;
+        }
+        return null;
+    }
+
+    
+
+    public List<Node> GetNeighborsNodes(Node currentNode)
     {
         List<Node> neighbords = new List<Node>();
         Vector2 coord = currentNode.Pos;
@@ -160,19 +186,19 @@ public class MapManager : MonoBehaviour
                 if(Mathf.Abs(i) == 1 && Mathf.Abs(j) == 1)
                 {
                     if (CheckAvialableNode(x-i, y)&& CheckAvialableNode(x, y-j))
-                        if (CheckAvialableNode(x, y,team,onlyVisible))
+                        if (CheckAvialableNode(x, y))
                             neighbords.Add(nodes[x, y]);
                 }
                 else
                 {
-                    if (CheckAvialableNode(x, y,team,onlyVisible))
+                    if (CheckAvialableNode(x, y))
                         neighbords.Add(nodes[x, y]);
                 }                
             }
         }
         return neighbords;
     }
-    public List<Node> GetNeighborsNodes(Node currentNode)
+    public List<Node> GetNeighborsNodes(Node currentNode,bool emptyNode)
     {
         List<Node> neighbords = new List<Node>();
         Vector2 coord = currentNode.Pos;
@@ -199,6 +225,23 @@ public class MapManager : MonoBehaviour
         }
         return neighbords;
     }
+    public bool CheckAvialableEmptyNode(int posX, int posY)
+    {
+        if (posX >= 0 && posY >= 0 && posX <= size - 1 && posY <= size - 1)
+        {
+            if(GetCharacterByPos(new Vector2(posX, posY), false))
+            {
+                return false;
+                
+            }
+            else
+            {
+                return nodes[posX, posY].Walkable;
+            }
+            
+        }
+        return false;
+    }
 
     public bool CheckAvialableNode(int posX, int posY)
     {
@@ -207,22 +250,21 @@ public class MapManager : MonoBehaviour
             return nodes[posX, posY].Walkable;
         }
         return false;
-    }
-    public bool CheckAvialableNode(int posX,int posY, int team, bool onlyVisible)
+    }    
+    public List<Cell> GetBushSectionByPos(Vector2 pos)
     {
-        if (posX >= 0 && posY >= 0 && posX <= size - 1 && posY <= size - 1)
+        foreach(List<Cell> section in bushSections)
         {
-            Character character = GetCharacterByPos(new Vector2(posX, posY), onlyVisible);
-            if (character != null)
+            foreach(Cell cell in section)
             {
-                bool alied = character.Team == team;
-                return nodes[posX, posY].Walkable && alied;
+                if(cell.Pos == pos)
+                {
+                    return section;
+                }
             }
-            else return nodes[posX, posY].Walkable;
         }
-        return false;
+        return null;
     }
-    
 
     private void LoadJsonMap()
     {
@@ -298,7 +340,7 @@ public class MapManager : MonoBehaviour
         Debug.LogError("there is no node for the pos" + (int)coord.x + ", " + (int)coord.y);
         return null;
     }
-    public Cell getCellFromNode(Node node)
+    public Cell GetCellFromNode(Node node)
     {
         return cells[(int)node.Pos.x,(int)node.Pos.y].GetComponent<Cell>();
     }

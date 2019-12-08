@@ -70,6 +70,7 @@ public class Server : SocketIOComponent
         On("open", (connect) =>
         {
             Debug.Log("connected");
+            connectedPlayers = new Dictionary<string, MyNetworkIdentity>();
         });
 
         On("playerJoin", (join) =>
@@ -182,7 +183,6 @@ public class Server : SocketIOComponent
         On("recieveActionData", (RecievedData) =>
         {
             CharacterActionData data = JsonUtility.FromJson<CharacterActionData>(RecievedData.data.ToString());
-            Debug.Log(data.id);
             currentGameDirector.ReceiveActionToReplicate(data);
         }
         );
@@ -197,12 +197,10 @@ public class Server : SocketIOComponent
 
     public void ReadyToEndTurn()
     {
-        Debug.Log("readyToEnd");
         Emit("readyToEndTurn");
     }
     public void SubmitAction(CharacterActionData data)
     {
-        Debug.Log("Submit");
         Emit("submitActionData", new JSONObject(JsonUtility.ToJson(data)));
     }
     public void KickPlayer(string kickId)
@@ -335,17 +333,13 @@ public class CharacterActionData
     public string id;
     public List<MovList> mov;
     public string followID;
-    public List<string> prepSkills;
-    public List<string> dashSkills;
-    public List<string> acitonSkills;
+    public Dictionary<int,Vector2Data> skills;
 
 
     public CharacterActionData()
     {
         mov = new List<MovList>();
-        prepSkills = new List<string>();
-        dashSkills = new List<string>();
-        acitonSkills = new List<string>();
+        skills = new Dictionary<int, Vector2Data>();
     }
     public List<Vector2> GetMov()
     {
@@ -367,7 +361,7 @@ public class CharacterActionData
     }
     public void SetMov(List<List<Vector2>> newMovs)
     {
-        mov= new List<MovList>();
+        mov = new List<MovList>();
         MovList provitionalList;
         foreach (List<Vector2> list in newMovs)
         {
@@ -378,6 +372,22 @@ public class CharacterActionData
             }
             mov.Add(provitionalList);
         }
+    }
+    public void SetSkills(Dictionary<int, Vector2> newSkills)
+    {
+        foreach(int key in newSkills.Keys)
+        {
+            skills.Add(key, new Vector2Data(newSkills[key].x, newSkills[key].y));
+        }
+    }
+    public Dictionary<int,Vector2> GetSkills()
+    {
+        Dictionary<int, Vector2> skillsToReturn = new Dictionary<int, Vector2>();
+        foreach (int key in skills.Keys)
+        {
+            skillsToReturn.Add(key, new Vector2(skills[key].x, skills[key].y));
+        }
+        return skillsToReturn;
     }
 }
 
