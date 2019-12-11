@@ -66,7 +66,7 @@ public class FogManager : MonoBehaviour
         List<Cell> currentVisibles;
         Vector2 direction;
         Vector2 gap;
-        for (int i = 0; i < 380; i++)
+        for (int i = 0; i < 360; i+=5)
         {
             direction = new Vector2(Mathf.Cos(i) * viewRange, Mathf.Sin(i) * viewRange);
             gap = (new Vector2(direction.y, direction.x).normalized) * thickness / 2;
@@ -141,7 +141,7 @@ public class FogManager : MonoBehaviour
         {
             if (!affectedsCoords.Contains(new Vector2((int)aim.x, j * yDirection)))
                 affectedsCoords.Add(new Vector2((int)aim.x, j * yDirection));
-        }
+        }        
         Cell[] cellsToReturn = new Cell[affectedsCoords.Count];
         for (int i = 0; i < affectedsCoords.Count; i++)
         {

@@ -48,15 +48,19 @@ public class MapManager : MonoBehaviour
                             break;
                         case "be":
                             totalTypes.Add(CellType.BuffEnergize);
+                            cell.GetComponent<Cell>().SetBuffSpawner(CellType.BuffEnergize);
                             break;
                         case "bs":
                             totalTypes.Add(CellType.BuffHaste);
+                            cell.GetComponent<Cell>().SetBuffSpawner(CellType.BuffHaste);
                             break;
                         case "bh":
                             totalTypes.Add(CellType.BuffHeal);
+                            cell.GetComponent<Cell>().SetBuffSpawner(CellType.BuffHeal);
                             break;
                         case "bm":
                             totalTypes.Add(CellType.BuffMight);
+                            cell.GetComponent<Cell>().SetBuffSpawner(CellType.BuffMight);
                             break;
                         case "e":
                             totalTypes.Add(CellType.Empty);

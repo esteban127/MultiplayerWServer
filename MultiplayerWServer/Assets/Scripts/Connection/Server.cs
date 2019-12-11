@@ -332,6 +332,7 @@ public class CharacterActionData
 {
     public string id;
     public List<MovList> mov;
+    public bool sprinting;
     public string followID;
     public Dictionary<int,Vector2Data> skills;
 

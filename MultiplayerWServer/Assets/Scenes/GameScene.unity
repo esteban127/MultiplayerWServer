@@ -415,7 +415,7 @@ MonoBehaviour:
   mapManager: {fileID: 1683298630}
   character0: {fileID: 778998144979383206, guid: 1115677b7a904c74d979bfa326ac7167,
     type: 3}
-  character1: {fileID: 778998144979383206, guid: 1d6547195a6834a4595ae342ea837cbe,
+  character1: {fileID: 778998144979383206, guid: 351e1eeba4ced074a9f5baede81ade1a,
     type: 3}
   lineRenderer: {fileID: 1600885670}
 --- !u!1001 &1061740575

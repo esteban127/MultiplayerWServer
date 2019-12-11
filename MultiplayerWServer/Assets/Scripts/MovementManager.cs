@@ -271,9 +271,19 @@ public class MovementManager : MonoBehaviour
             }
         }
     }
+    public void DrawMovement(Node start, int walkableScore, int actionPoints, int sprintScore)
+    {        
+        if (actionPoints > 0)
+        {
+            DrawMovementWalkableRange(start, walkableScore);
+        }
+        if (actionPoints >= 2)
+        {
+            DrawMovementSprintRange(start, walkableScore + sprintScore, walkableScore);
+        }
+    }
 
-
-    public void DrawMovementSprintRange(Node start, int sprintScore, int walkableScore)
+    private void DrawMovementSprintRange(Node start, int sprintScore, int walkableScore)
     {
         sprintableNodes = GetAllNodesBetweenScores(start, walkableScore, sprintScore);
         foreach(Node node in sprintableNodes)
@@ -281,7 +291,7 @@ public class MovementManager : MonoBehaviour
             map.GetCellFromNode(node).SetSprintableColor();            
         }
     }
-    public void DrawMovementWalkableRange(Node start, int walkableScore)
+    private void DrawMovementWalkableRange(Node start, int walkableScore)
     {
         walkableNodes = GetAllNodesUnderAScore(start, walkableScore);
         startingNode = start;

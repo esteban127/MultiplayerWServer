@@ -59,7 +59,7 @@ MonoBehaviour:
   energyCost: 0
   energyProduced: 0
   damage0: 0
-  damate1: 0
+  damage1: 0
   damage2: 0
   icon: {fileID: 0}
 --- !u!1 &778998144979383206
@@ -262,19 +262,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   abilityName: FUSION PULSE
   cooldown: 0
-  cost: 1
+  cost: 2
   type: 2
   aim: 4
   tags: 0000000005000000
   statusToApply: []
   range0: 9
   range1: 0
-  thickness: 1
+  thickness: 0.7
   duration: 0
   energyCost: 100
   energyProduced: 0
   damage0: 50
-  damate1: 0
+  damage1: 0
   damage2: 0
   icon: {fileID: 0}
 --- !u!1 &3053085405513834583
@@ -322,7 +322,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   abilityName: HEADSHOT
   cooldown: 0
-  cost: 1
+  cost: 2
   type: 2
   aim: 0
   tags: 
@@ -334,7 +334,7 @@ MonoBehaviour:
   energyCost: 0
   energyProduced: 12
   damage0: 34
-  damate1: 0
+  damage1: 0
   damage2: 0
   icon: {fileID: 0}
 --- !u!1 &3132161663164517108
@@ -382,7 +382,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   abilityName: RELOCATE
   cooldown: 0
-  cost: 2
+  cost: 3
   type: 1
   aim: 2
   tags: 0100000005000000
@@ -394,7 +394,7 @@ MonoBehaviour:
   energyCost: 0
   energyProduced: 0
   damage0: 0
-  damate1: 0
+  damage1: 0
   damage2: 0
   icon: {fileID: 0}
 --- !u!1 &3661980817161759296
@@ -442,19 +442,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   abilityName: VORTEX ROUND
   cooldown: 6
-  cost: 1
+  cost: 2
   type: 2
   aim: 0
-  tags: 0300000007000000
+  tags: 0300000008000000
   statusToApply: []
-  range0: 0
-  range1: 2.5
+  range0: 9
+  range1: 3
   thickness: 0.4
   duration: 0
   energyCost: 0
   energyProduced: 8
   damage0: 30
-  damate1: 20
+  damage1: 20
   damage2: 0
   icon: {fileID: 0}
 --- !u!1 &4278560448493579418
@@ -502,10 +502,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   abilityName: OVERWATCH DRONE
   cooldown: 3
-  cost: 1
-  type: 2
+  cost: 2
+  type: 0
   aim: 0
-  tags: 0600000008000000
+  tags: 060000000900000007000000
   statusToApply: []
   range0: 9
   range1: 0
@@ -514,7 +514,7 @@ MonoBehaviour:
   energyCost: 0
   energyProduced: 10
   damage0: 30
-  damate1: 0
+  damage1: 0
   damage2: 0
   icon: {fileID: 0}
 --- !u!1 &5107793761904956565
@@ -576,7 +576,7 @@ MonoBehaviour:
   energyCost: 0
   energyProduced: 0
   damage0: 0
-  damate1: 0
+  damage1: 0
   damage2: 0
   icon: {fileID: 0}
 --- !u!1 &6178922512565278222
@@ -638,6 +638,6 @@ MonoBehaviour:
   energyCost: 0
   energyProduced: 0
   damage0: 0
-  damate1: 0
+  damage1: 0
   damage2: 0
   icon: {fileID: 0}

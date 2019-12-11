@@ -15,7 +15,8 @@ public enum CharacterAction
     cat1,
     cat2,
     follow,
-    mov
+    mov,
+    sprint
 }
 /*public enum SkillType
 {
@@ -29,6 +30,7 @@ public class GameDirector : MonoBehaviour
 {
     [SerializeField] MapManager mapManager;
     MovementManager movManager;
+    TrapManager trapManager;
     FogManager fogManager;
     AimSystem aim;
     Dictionary<string,GameObject> players;
@@ -43,6 +45,7 @@ public class GameDirector : MonoBehaviour
     Vector2 currentAim;
     Node currentNode;
     int currentMoveScore;
+    int actionPoints;
     Character followTarget;
     Character localCharacter;
     List<Character> allieds;
@@ -64,7 +67,9 @@ public class GameDirector : MonoBehaviour
         PositionCamera();        
         mov = new List<List<Vector2>>();
         abilitiesCasted = new Dictionary<int, Vector2>();
-        aim = new AimSystem(mapManager);
+        trapManager = new TrapManager();
+        turnStart += trapManager.NewTurn;
+        aim = new AimSystem(mapManager,trapManager);
         fogManager = new FogManager(mapManager);        
         actionLog = new List<CharacterAction>();
         Turn1();
@@ -122,6 +127,7 @@ public class GameDirector : MonoBehaviour
         fogManager.CalculateVision(allieds,true);
         fogManager.CalculateVision(enemies,false);
         followTarget = null;
+        actionPoints = 1;
         currentMoveScore = localCharacter.MovScore;
         currentNode = mapManager.GetNodeFromACoord(localCharacter.Pos);
         movManager.DrawTurn1Movement(localCharacter.Team,currentNode);        
@@ -129,19 +135,92 @@ public class GameDirector : MonoBehaviour
 
     public void NewTurn()
     {
+        actionPoints = 3;
         turnStart();
         actionsToReplicate = new List<CharacterActionData>();
-        currentNode = mapManager.GetNodeFromACoord(localCharacter.Pos);
-        currentMoveScore = localCharacter.MovScore;
+        currentNode = mapManager.GetNodeFromACoord(localCharacter.Pos);        
         followTarget = null;
         abilitiesCasted = new Dictionary<int, Vector2>();
         fogManager.CalculateVision(allieds, true);
         fogManager.CalculateVision(enemies, false);
-        movManager.DrawMovementWalkableRange(currentNode,currentMoveScore);
+        CheckBuffSpawneds();
+        currentMoveScore = localCharacter.MovScore;        
+        movManager.DrawMovement(currentNode,currentMoveScore,actionPoints,localCharacter.SprintScore);        
         DrawMov();
         InputManager.inputEneable = true;
     }
-    #region movement
+
+    private void CheckBuffSpawneds( )
+    {
+        Cell currentCell;
+        for (int i = 0; i < allieds.Count; i++)
+        {
+            currentCell = mapManager.GetCellFromCoord(allieds[i].Pos);
+            PickeableBuff cellBuff = currentCell.PickBuff(allieds[i].Team);
+            if (cellBuff != PickeableBuff.None)
+            {
+                Status statusToApply = new Status();
+                switch (cellBuff)
+                {
+                    case PickeableBuff.Energize:
+                        statusToApply.type = statusType.energized;
+                        statusToApply.duration = 2;
+                        break;
+                    case PickeableBuff.Heal:
+                        statusToApply.type = statusType.healing;
+                        statusToApply.duration = 2;
+                        break;
+                    case PickeableBuff.Haste:
+                        statusToApply.type = statusType.hasted;
+                        statusToApply.duration = 2;
+                        break;
+                    case PickeableBuff.semiHeal:
+                        statusToApply.type = statusType.healing;
+                        statusToApply.duration = 0;
+                        break;
+                    case PickeableBuff.Might:
+                        statusToApply.type = statusType.might;
+                        statusToApply.duration = 2;
+                        break;
+                }
+                allieds[i].ApplyStatus(statusToApply);
+            }
+        }
+        for (int i = 0; i < enemies.Count; i++)
+        {
+            currentCell = mapManager.GetCellFromCoord(enemies[i].Pos);
+            PickeableBuff cellBuff = currentCell.PickBuff(enemies[i].Team);
+            if (cellBuff != PickeableBuff.None)
+            {
+                Status statusToApply = new Status();
+                switch (cellBuff)
+                {
+                    case PickeableBuff.Energize:
+                        statusToApply.type = statusType.energized;
+                        statusToApply.duration = 2;
+                        break;
+                    case PickeableBuff.Heal:
+                        statusToApply.type = statusType.healing;
+                        statusToApply.duration = 2;
+                        break;
+                    case PickeableBuff.Haste:
+                        statusToApply.type = statusType.hasted;
+                        statusToApply.duration = 2;
+                        break;
+                    case PickeableBuff.semiHeal:
+                        statusToApply.type = statusType.healing;
+                        statusToApply.duration = 0;
+                        break;
+                    case PickeableBuff.Might:
+                        statusToApply.type = statusType.might;
+                        statusToApply.duration = 2;
+                        break;
+                }
+                enemies[i].ApplyStatus(statusToApply);
+            }
+        }
+
+    }
     private void PositionCamera()
     {
         if (localCharacter.Team == 0)
@@ -150,9 +229,11 @@ public class GameDirector : MonoBehaviour
         }
     }
 
+    #region movement
+
     public void MovCommand(Node node)
     {
-        if (currentMoveScore >= 10&& node != currentNode)
+        if ((currentMoveScore >= 10|| actionPoints>=2) && node != currentNode)
         {
             if (actionLog.Contains(CharacterAction.follow))
             {
@@ -176,11 +257,19 @@ public class GameDirector : MonoBehaviour
                     Node lastNode = currentNode;
                     CurrentMov.Add(currentNode.Pos);
                     foreach (Node pathNode in fullPath)
-                    {
+                    {                                               
                         if (movManager.WalkableNode(pathNode))
                         {
                             CurrentMov.Add(pathNode.Pos);
                             lastNode = pathNode;
+                        }
+                        if (actionPoints >= 2)
+                        {
+                            if (movManager.SprintableNode(pathNode))
+                            {
+                                CurrentMov.Add(pathNode.Pos);
+                                lastNode = pathNode;
+                            }
                         }
                     }                                
                     if (turn1)
@@ -191,11 +280,20 @@ public class GameDirector : MonoBehaviour
                     }
                     else
                     {
-                        actionLog.Add(CharacterAction.mov);
+                        if (actionPoints >= 2)
+                        {
+                            actionPoints -= 2;
+                            actionLog.Add(CharacterAction.sprint);
+                            currentMoveScore += localCharacter.SprintScore;
+                        }
+                        else
+                        {
+                            actionLog.Add(CharacterAction.mov);
+                        }
                         currentNode = lastNode;
                         currentMoveScore -= lastNode.g;
                         movManager.ResetFloorColor();
-                        movManager.DrawMovementWalkableRange(currentNode, currentMoveScore);
+                        movManager.DrawMovement(currentNode, currentMoveScore,actionPoints, localCharacter.SprintScore);
                     }
                     mov.Add(CurrentMov);
                     DrawMov();
@@ -208,7 +306,24 @@ public class GameDirector : MonoBehaviour
 
     public void SprintCommand(Node node)
     {
-        actionLog.Add(CharacterAction.mov);
+        actionPoints -= 2;
+        List<Vector2> CurrentMov = new List<Vector2>();                
+        actionLog.Add(CharacterAction.sprint);
+        Node[] nodes = movManager.GetCalculatedPath(currentNode, node);
+        CurrentMov.Add(currentNode.Pos);
+        for (int i = 0; i < nodes.Length; i++)
+        {
+            CurrentMov.Add(nodes[i].Pos);
+        }
+        mov.Add(CurrentMov);
+        currentNode = node;
+        currentMoveScore -= node.g;
+        currentMoveScore += localCharacter.SprintScore;
+        movManager.ResetFloorColor();
+        movManager.DrawMovement(currentNode, currentMoveScore, actionPoints, localCharacter.SprintScore);
+
+
+        DrawMov();
     }
     private void WalkCommand(Node node)
     {
@@ -239,7 +354,7 @@ public class GameDirector : MonoBehaviour
             currentNode = node;
             currentMoveScore -= node.g;
             movManager.ResetFloorColor();
-            movManager.DrawMovementWalkableRange(currentNode, currentMoveScore);
+            movManager.DrawMovement(currentNode, currentMoveScore, actionPoints, localCharacter.SprintScore);
         }
 
         DrawMov();
@@ -323,6 +438,7 @@ public class GameDirector : MonoBehaviour
             if (selectedAbility.aim == aimType.selfBuff)
             {
                 actionLog.Add((CharacterAction)abilitySlot);
+                
                 abilitiesCasted.Add(abilitySlot, localCharacter.Pos);
                 return false;
             }
@@ -332,11 +448,15 @@ public class GameDirector : MonoBehaviour
             }
         }        
     }
-    public void Aiming(Vector2 aimingPos)//recive ability to know range and aiming type
+    public void ModifiActionPoints(int ammount)
+    {
+        actionPoints += ammount;
+    }
+    public void Aiming(Vector2 aimingPos)
     {
         currentAim = aimingPos;
         movManager.DisableMovementDraw();
-        aim.PredictiveAim(localCharacter.Pos, aimingPos, 8, 0.5f ,aimType.linear,localCharacter.Team,40);
+        aim.PredictiveAim(localCharacter.Pos, aimingPos,localCharacter,selectedAbility);
     }
     public void ConfirmAim()
     {
@@ -381,6 +501,8 @@ public class GameDirector : MonoBehaviour
         {
             actionData.SetMov(mov);
         }
+        if (actionPoints >= 2|| actionLog.Contains(CharacterAction.sprint))
+            actionData.sprinting = true;
         actionData.SetSkills(abilitiesCasted);
         sv.SubmitAction(actionData);
     }
@@ -391,7 +513,13 @@ public class GameDirector : MonoBehaviour
         {
             switch (actionLog[actionLog.Count - 1])
             {
+                case CharacterAction.sprint:
                 case CharacterAction.mov:
+                    if(actionLog[actionLog.Count - 1] == CharacterAction.sprint)
+                    {
+                        actionPoints += 2;
+                        currentMoveScore -= localCharacter.SprintScore;
+                    }
                     movManager.GetPath(mapManager.GetNodeFromACoord(mov[mov.Count - 1][0]), currentNode);
                     currentMoveScore = currentMoveScore + currentNode.g;
                     currentNode = mapManager.GetNodeFromACoord(mov[mov.Count - 1][0]);
@@ -400,13 +528,13 @@ public class GameDirector : MonoBehaviour
                     if (!turn1)
                     {
                         movManager.ResetFloorColor();
-                        movManager.DrawMovementWalkableRange(currentNode, currentMoveScore);
+                        movManager.DrawMovement(currentNode, currentMoveScore, actionPoints, localCharacter.SprintScore);
                     }
                     break;
                 case CharacterAction.follow:
                     followTarget = null;                    
                     movManager.ResetFloorColor();
-                    movManager.DrawMovementWalkableRange(currentNode, currentMoveScore);     
+                    movManager.DrawMovement(currentNode, currentMoveScore, actionPoints, localCharacter.SprintScore);
                     DrawMov();                    
                     break;
             }
@@ -430,7 +558,7 @@ public class GameDirector : MonoBehaviour
                     case CharacterAction.follow:
                         followTarget = null;                        
                         movManager.ResetFloorColor();
-                        movManager.DrawMovementWalkableRange(currentNode, currentMoveScore);
+                        movManager.DrawMovement(currentNode, currentMoveScore, actionPoints, localCharacter.SprintScore);
                         DrawMov();                        
                         break;
                 }
@@ -478,17 +606,22 @@ public class GameDirector : MonoBehaviour
         mapManager.ResetPlayersPos();
         foreach (CharacterActionData data in actionsToReplicate)
         {
-            if(data.mov.Count>0)
+            Character character = players[data.id].GetComponent<Character>();
+            if (data.sprinting)
+            {
+                character.MovScore += character.SprintScore;
+            }
+            if (data.mov.Count>0)
             {
                 charactersMoving++;
-                movingCharacters.Add(players[data.id].GetComponent<Character>());
+                movingCharacters.Add(character);
                 movements.Add(data.GetMov());
             }
             else
             {
                 if(data.followID != "")
                 {
-                    followingCharacters.Add(players[data.id].GetComponent<Character>());
+                    followingCharacters.Add(character);
                     followingTargets.Add(players[data.followID].GetComponent<Character>());
                 }
                 else
@@ -582,11 +715,54 @@ public class GameDirector : MonoBehaviour
                 Cell currentCell = mapManager.GetCellFromCoord(movingCharacters[i].Pos);
                 if (movingCharacters[i].CellOwner)
                 {
-                    //movingCharacters[i].ApplyStatus(currentCell.CheckBuffs(movingCharacters[i].Team));
-                    
+                    PickeableBuff cellBuff = currentCell.PickBuff(movingCharacters[i].Team);
+                    if (cellBuff != PickeableBuff.None)
+                    {
+                        Status statusToApply = new Status();
+                        switch (cellBuff)
+                        {
+                            case PickeableBuff.Energize:
+                                statusToApply.type = statusType.energized;
+                                statusToApply.duration = 2;
+                                break;
+                            case PickeableBuff.Heal:
+                                statusToApply.type = statusType.healing;
+                                statusToApply.duration = 2;
+                                break;
+                            case PickeableBuff.Haste:
+                                statusToApply.type = statusType.hasted;
+                                statusToApply.duration = 2;
+                                break;
+                            case PickeableBuff.semiHeal:
+                                statusToApply.type = statusType.healing;
+                                statusToApply.duration = 0;
+                                break;
+                            case PickeableBuff.Might:
+                                statusToApply.type = statusType.might;
+                                statusToApply.duration = 2;
+                                break;
+                        }
+                        movingCharacters[i].ApplyStatus(statusToApply);
+                    }
+
                 }
-                //then activate traps
-                
+                List<Trap> cellTraps = currentCell.CheckTraps(movingCharacters[i].Team);
+                foreach(Trap trap in cellTraps)
+                {
+                    movingCharacters[i].ReceiveDamage(trap.ability.damage0,false);
+                    foreach(Status status in trap.ability.statusToApply)
+                    {
+                        movingCharacters[i].ApplyStatus(status);
+                    }
+                    if (trap.ability.tags.Contains(abilityTags.energyOnActivate))
+                    {
+                        trap.caster.AddEnergy(trap.ability.energyProduced);
+                    }
+                    if (trap.ability.tags.Contains(abilityTags.destroyOnContact))
+                    {
+                        trapManager.RemoveTrap(trap);
+                    }
+                }                
             }
             movCounter++;
             fogManager.CalculateVision(allieds,true);
@@ -783,11 +959,54 @@ public class GameDirector : MonoBehaviour
                 Cell currentCell = mapManager.GetCellFromCoord(followingCharacters[i].Pos);
                 if (followingCharacters[i].CellOwner)
                 {
-                    //movingCharacters[i].ApplyStatus(currentCell.CheckBuffs(movingCharacters[i].Team));
+                    PickeableBuff cellBuff = currentCell.PickBuff(followingCharacters[i].Team);
+                    if (cellBuff != PickeableBuff.None)
+                    {
+                        Status statusToApply = new Status();
+                        switch (cellBuff)
+                        {
+                            case PickeableBuff.Energize:
+                                statusToApply.type = statusType.energized;
+                                statusToApply.duration = 2;
+                                break;
+                            case PickeableBuff.Heal:
+                                statusToApply.type = statusType.healing;
+                                statusToApply.duration = 2;
+                                break;
+                            case PickeableBuff.Haste:
+                                statusToApply.type = statusType.hasted;
+                                statusToApply.duration = 2;
+                                break;
+                            case PickeableBuff.semiHeal:
+                                statusToApply.type = statusType.healing;
+                                statusToApply.duration = 0;
+                                break;
+                            case PickeableBuff.Might:
+                                statusToApply.type = statusType.might;
+                                statusToApply.duration = 2;
+                                break;
+                        }
+                        followingCharacters[i].ApplyStatus(statusToApply);
+                    }
 
                 }
-                //then activate traps
-
+                List<Trap> cellTraps = currentCell.CheckTraps(movingCharacters[i].Team);
+                foreach (Trap trap in cellTraps)
+                {
+                    movingCharacters[i].ReceiveDamage(trap.ability.damage0, false);
+                    foreach (Status status in trap.ability.statusToApply)
+                    {
+                        movingCharacters[i].ApplyStatus(status);
+                    }
+                    if (trap.ability.tags.Contains(abilityTags.energyOnActivate))
+                    {
+                        trap.caster.AddEnergy(trap.ability.energyProduced);
+                    }
+                    if (trap.ability.tags.Contains(abilityTags.destroyOnContact))
+                    {
+                        trapManager.RemoveTrap(trap);
+                    }
+                }
             }
             movCounter++;
             fogManager.CalculateVision(allieds,true);

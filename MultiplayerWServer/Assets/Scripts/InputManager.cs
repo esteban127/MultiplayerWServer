@@ -34,11 +34,7 @@ public class InputManager : MonoBehaviour
         {
             if (lastCell != null)
                 lastCell.GetComponent<Cell>().HighLight(false);
-
-            if (aimingAbility)
-            {
-                gameDirector.Aiming(new Vector2(hit.point.x, hit.point.z));
-            }
+            
             else
             {
                 if (characterOnMause != hit.transform.gameObject)
@@ -55,17 +51,17 @@ public class InputManager : MonoBehaviour
         else
         {
             characterOnMause = null;
-        }
-        if(characterOnMause == null)
+        }        
+        layer_mask = LayerMask.GetMask("Cells");
+        if (Physics.Raycast(ray, out hit, 50f, layer_mask))
         {
-            layer_mask = LayerMask.GetMask("Cells");
-            if (Physics.Raycast(ray, out hit, 50f, layer_mask))
+            if (aimingAbility)
             {
-                if (aimingAbility)
-                {
-                    gameDirector.Aiming(new Vector2(hit.point.x, hit.point.z));
-                }
-                else
+                gameDirector.Aiming(new Vector2(hit.point.x, hit.point.z));
+            }
+            else
+            {
+                if (characterOnMause == null)
                 {
                     if (lastCell != hit.transform.gameObject)
                     {
@@ -76,15 +72,11 @@ public class InputManager : MonoBehaviour
                     }
                 }
             }
-            else
-            {
-                lastCell = null;
-            }
         }
         else
         {
             lastCell = null;
-        }
+        }       
 
     }
     private void Update()
@@ -176,9 +168,7 @@ public class InputManager : MonoBehaviour
                 SelectAbility(6);
             }
         }
-
-        CameraImputs();              
-        
+        CameraImputs(); 
     }
 
     public void SelectAbility(int abilitySlot)

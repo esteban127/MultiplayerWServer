@@ -57,6 +57,8 @@ public class Character : MonoBehaviour
     private int shield = 0;
     private int movScore;
     public int MovScore { get { return movScore; } set{ movScore = value; } }
+    private int sprintScore = 38;
+    public int SprintScore { get { return sprintScore; } }
     public int movSpended = 0;
     private List<Status> currentStatus;
     public List<Status> CurrentStatus { get { return currentStatus; } }
@@ -94,7 +96,24 @@ public class Character : MonoBehaviour
                 hasted = true;
         }
         movScore = 48 + (slowed ? -20 : 0) + (hasted ? 20 : 0);
+        sprintScore = 38 + (hasted ? 20 : 0);
         movSpended = 0;
+    }
+    public void RecalculateMovScore()
+    {
+        bool slowed = false;
+        bool hasted = false;
+
+        foreach (Status status in CurrentStatus)
+        {
+            if (status.type == statusType.slowed)
+                slowed = true;
+            if (status.type == statusType.hasted)
+                hasted = true;
+        }
+        movScore = 48 + (slowed ? -20 : 0) + (hasted ? 20 : 0);
+        sprintScore = 38 + (hasted ? 20 : 0);
+        movScore -= movSpended;
     }
     public void AddEnergy(int amount)
     {
@@ -174,10 +193,41 @@ public class Character : MonoBehaviour
     {
 
     }
+    public void ReplenishHealt(int ammount)
+    {
+        health += ammount;
+        if(health> maxHealth)
+        {
+            health = maxHealth;
+        }
+    }
     public void ApplyStatus(Status status)
     {
-        Debug.Log("gain status " + status.ToString());
-    }
+        bool statusExist = false;
+        if(status.type == statusType.healing)
+        {
+            ReplenishHealt(10);
+        }        
+        foreach (Status activeStatus in currentStatus)
+        {
+            if(activeStatus.type == status.type)
+            {
+                statusExist = true;
+                if(status.duration> activeStatus.duration)
+                {
+                    activeStatus.duration = status.duration;
+                }
+            }
+        }
+        if (!statusExist && status.duration>0)
+        {
+            currentStatus.Add(status);
+            if (status.type == statusType.hasted || status.type == statusType.slowed)
+            {
+                RecalculateMovScore();
+            }
+        }
+    }    
     public void Spawn(Vector2 pos, int _team)
     {
         movScore = 200; //turn 1

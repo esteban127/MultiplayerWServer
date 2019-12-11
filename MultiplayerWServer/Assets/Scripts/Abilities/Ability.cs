@@ -18,6 +18,7 @@ public enum abilityTags
     price,
     ignoreWalls,
     trap,
+    destroyOnContact,
     energyPerEnemyHit,
     energyOnActivate
 }
@@ -29,8 +30,8 @@ public class Ability : MonoBehaviour
     public int cost; // 0 free - 1 normal - 2 cannotMove
     public abilityType type;
     public aimType aim;
-    public abilityTags[] tags;
-    public Status[] statusToApply;
+    public List<abilityTags> tags;
+    public List<Status> statusToApply;
     public float range0;
     public float range1;
     public float thickness;
@@ -38,7 +39,7 @@ public class Ability : MonoBehaviour
     public int energyCost;
     public int energyProduced;
     public int damage0;
-    public int damate1;
+    public int damage1;
     public int damage2;
     public Sprite icon;
 }

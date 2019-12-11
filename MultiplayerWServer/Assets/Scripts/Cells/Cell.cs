@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -22,16 +23,31 @@ public enum CellType
     Eblock,
     Sblock,
 }
+public enum PickeableBuff
+{
+    None,
+    Heal,
+    semiHeal,
+    Might,
+    Energize,
+    Haste,
+}
 
 public class Cell : MonoBehaviour
 {
     public List<CellType> cellType;
     Material materialInstance;
-    Material fogMateria;
+    Material fogMaterial;
     Material buffMaterial;    
     bool beingClicked = false;
     [SerializeField] GameObject fog;
+    [SerializeField] GameObject playerDeadHeal;
     [SerializeField] GameObject buff;
+    [SerializeField] GameObject buffSpawner;
+    [SerializeField] GameObject buffCoutner0;
+    [SerializeField] GameObject buffCoutner1;
+    [SerializeField] GameObject buffCoutner2;
+    [SerializeField] GameObject buffCoutner3;
     [SerializeField] Color fogColor;
     [SerializeField] Color bushFogColor;
     [SerializeField] Color buffHealColor;
@@ -50,14 +66,21 @@ public class Cell : MonoBehaviour
     bool visible_1 = false;
     public bool Visible_1 { get { return visible_1; } }
     bool bushActive = true;
+    PickeableBuff currentBuff;
+    PickeableBuff buffToSpawn;
+    int teamOfDeadHeal;
+    bool isABuffSpawner = false;
+    int buffCharge = 0;
+    List<Trap> traps;
     Vector2 pos;
     public Vector2 Pos { get { return pos; } set { pos = value; } }
-    //List<Traps> traps
+    
     private void Awake()
     {
         materialInstance = gameObject.GetComponent<Renderer>().material;
-        fogMateria = fog.GetComponent<Renderer>().material;
+        fogMaterial = fog.GetComponent<Renderer>().material;
         buffMaterial = buff.GetComponent<Renderer>().material;
+        traps = new List<Trap>();
         SetBaseColor();
     }
     public void SetVisible(bool isVisible, int team, bool toggleFog)
@@ -75,18 +98,136 @@ public class Cell : MonoBehaviour
             visible_1 = isVisible;
         }
     }
+    public void NewTurn()
+    {
+        SetBaseColor();
+        if (isABuffSpawner && buffCharge < 4)
+        {
+            TickBuffSpawn();
+        }
+    }
+
+    private void TickBuffSpawn()
+    {
+        buffCharge++;
+        switch (buffCharge)
+        {
+            case 1:
+                buffCoutner0.SetActive(true);
+                break;
+            case 2:
+                buffCoutner1.SetActive(true);
+                break;
+            case 3:
+                buffCoutner2.SetActive(true);
+                break;
+            case 4:
+                buffCoutner3.SetActive(true);
+                buff.SetActive(true);
+                currentBuff = buffToSpawn;
+                break;
+        }
+    }
     public bool IsAValidBush()
     {
         return cellType.Contains(CellType.FogBush) && bushActive;
     }
-    public void CheckTraps(int team)
+    public List<Trap> CheckTraps(int team)
     {
-        //shouldReturnTraps
+        List<Trap> enemyTraps = new List<Trap>();
+        foreach(Trap trap in traps)
+        {
+            if(trap.caster.Team != team)
+            {
+                enemyTraps.Add(trap);
+            }
+        }
+        return enemyTraps;
     }
-    public statusType CheckBuffs(int team)
+    public void SpawnPlayerDeadHeal(int team,bool isEnemy)
     {
-        //shouldReturnBuffs
-        return 0; 
+        currentBuff = PickeableBuff.semiHeal;
+        teamOfDeadHeal = team;
+        playerDeadHeal.SetActive(true);
+        if (isEnemy)
+        {
+            playerDeadHeal.GetComponent<Renderer>().material.color = buffHealColor;
+            
+        }
+        else
+        {
+            playerDeadHeal.GetComponent<Renderer>().material.color = fogColor;
+        }
+    }
+    public PickeableBuff PickBuff(int team)
+    {
+        PickeableBuff buffToReturn = currentBuff;
+        if(currentBuff!= PickeableBuff.None)
+        {
+
+            playerDeadHeal.SetActive(false);
+            if (buff.activeInHierarchy)
+            {
+                buff.SetActive(false);
+                buffCharge = 0;
+                buffCoutner0.SetActive(false);
+                buffCoutner1.SetActive(false);
+                buffCoutner2.SetActive(false);
+                buffCoutner3.SetActive(false);
+            }            
+          
+            if(currentBuff == PickeableBuff.semiHeal)
+            {
+                if(teamOfDeadHeal == team)
+                {
+                    return PickeableBuff.None;
+                }
+            }
+            currentBuff = PickeableBuff.None;
+        }
+        return buffToReturn; 
+    }
+    public void SetBuffSpawner(CellType buffType)
+    {
+        isABuffSpawner = true;
+        buffSpawner.SetActive(true);
+        buffCharge = 2;
+        Color currentBuffColor = buffHealColor;
+        switch (buffType)
+        {
+            case CellType.BuffEnergize:
+                currentBuffColor = buffEnergizeColor;
+                buffToSpawn = PickeableBuff.Energize;
+                break;
+            case CellType.BuffHeal:
+                currentBuffColor = buffHealColor;
+                buffToSpawn = PickeableBuff.Heal;
+                break;
+            case CellType.BuffHaste:
+                currentBuffColor = buffHasteColor;
+                buffToSpawn = PickeableBuff.Haste;
+                break;
+            case CellType.BuffMight:
+                currentBuffColor = buffMightColor;
+                buffToSpawn = PickeableBuff.Might;
+                break;
+        }
+        buff.GetComponent<Renderer>().material.color = currentBuffColor;
+        buffCoutner0.GetComponent<SpriteRenderer>().color = currentBuffColor;
+        buffCoutner1.GetComponent<SpriteRenderer>().color = currentBuffColor;
+        buffCoutner2.GetComponent<SpriteRenderer>().color = currentBuffColor;
+        buffCoutner3.GetComponent<SpriteRenderer>().color = currentBuffColor;
+        buffCoutner0.SetActive(true);
+        buffCoutner1.SetActive(true);
+    }
+    public void AddTrap(Trap trap)
+    {
+        traps.Add(trap);
+    }
+
+    public void RemoveTrapLocally(Trap trap)
+    {
+        traps.Remove(trap);
     }
 
     public void HighLight(bool highlighted)
@@ -97,13 +238,6 @@ public class Cell : MonoBehaviour
             color.a = highlighted ? 0.75f : 0.5f;
             materialInstance.color = color;
         }        
-    }
-
-    public void NewTurn()
-    {
-        SetBaseColor();
-        //trapduruation--
-        //buffSpawn
     }
 
     public void ClickedHighLight(bool clicked)
@@ -139,7 +273,11 @@ public class Cell : MonoBehaviour
     }    
     public void SetBushFogColor()
     {
-        fogMateria.color = bushFogColor;
+        if(fogMaterial == null)
+        {
+            fogMaterial = fog.GetComponent<Renderer>().material;
+        }
+        fogMaterial.color = bushFogColor;
     }
 
 }
