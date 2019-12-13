@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum aimType
+public enum AimType
 {
     linear,
     cone,
@@ -36,9 +36,9 @@ public class AimSystem
         }
         switch (ability.aim)
         {
-            case aimType.linear:
+            case AimType.linear:
 
-                if (ability.tags.Contains(abilityTags.trap))
+                if (ability.tags.Contains(AbilityTags.trap))
                 {
                     hits[0].Add(LinearTrap(origin, end,caster, ability,true,false));
                 }
@@ -46,23 +46,29 @@ public class AimSystem
                 {
                     hits[0].Add(LinearImpact(origin, end, ability.range0, ability.thickness, team, true, true));
 
-                    if (ability.tags.Contains(abilityTags.explosiveProjectile))
+                    if (ability.tags.Contains(AbilityTags.explosiveProjectile))
                     {
                         if (hits[0][0].target != null)
                         {
                             hits[1] = ExplosionImpact(hits[0][0].impactPos, hits[0][0].target, ability.range1, team, true, true);
                         }
                     }
-                }
-                                
+                }                                
                 break;
+            case AimType.cell:
+                if (ability.tags.Contains(AbilityTags.noDamage))
+                {
+                    hits[0].Add(CellCast(origin, end, ability.range0, true, ability.tags.Contains(AbilityTags.ignoreWalls)));
+                }
 
-            case aimType.lineAoE:
-                hits[0] = LinearPirce(origin, end, ability.range0, ability.thickness, team, true, true, ability.tags.Contains(abilityTags.ignoreWalls));
+                break;
+            case AimType.lineAoE:
+                hits[0] = LinearPirce(origin, end, ability.range0, ability.thickness, team, true, true, ability.tags.Contains(AbilityTags.ignoreWalls));
             break;
         }
         return hits;
-    }    
+    }
+    
 
     public List<HitInfo>[] CheckImpact(Vector2 origin, Vector2 end, Character caster, Ability ability)
     {
@@ -74,8 +80,8 @@ public class AimSystem
         }
         switch (ability.aim)
         {
-            case aimType.linear:
-                if (ability.tags.Contains(abilityTags.trap))
+            case AimType.linear:
+                if (ability.tags.Contains(AbilityTags.trap))
                 {
                     hits[0].Add(LinearTrap(origin, end, caster, ability, false, true));
                 }
@@ -83,7 +89,7 @@ public class AimSystem
                 {
                     hits[0].Add(LinearImpact(origin, end, ability.range0, ability.thickness, team, false, false));
 
-                    if (ability.tags.Contains(abilityTags.explosiveProjectile))
+                    if (ability.tags.Contains(AbilityTags.explosiveProjectile))
                     {
                         if (hits[0][0].target != null)
                         {
@@ -93,13 +99,56 @@ public class AimSystem
                 }
                 break;
 
-            case aimType.lineAoE:
-                hits[0] = LinearPirce(origin, end, ability.range0, ability.thickness, team, false, false, ability.tags.Contains(abilityTags.ignoreWalls));
+            case AimType.cell:
+                if (ability.tags.Contains(AbilityTags.noDamage))
+                {
+                    hits[0].Add(CellCast(origin, end, ability.range0, false, ability.tags.Contains(AbilityTags.ignoreWalls)));
+                }
+                break;
+
+            case AimType.lineAoE:
+                hits[0] = LinearPirce(origin, end, ability.range0, ability.thickness, team, false, false, ability.tags.Contains(AbilityTags.ignoreWalls));
                 break;
         }
         return hits;
     }
-
+    private HitInfo CellCast(Vector2 origin, Vector2 target, float range, bool drawFloor,bool ignoreWalls)
+    {
+        HitInfo info = new HitInfo();
+        List<Node> avilableNodes = map.GetAllNodesInARange(map.GetNodeFromACoord(origin), (int)range);
+        Node aimingNode = map.GetNodeFromACoord(target + new Vector2(0.5f,0.5f));
+        if (!ignoreWalls)
+        {
+            //should check with calculateLinearImpact
+        }
+        if (drawFloor)
+        {
+            lastAimed = new List<Cell>();
+            Cell currentCell;
+            foreach (Node node in avilableNodes)
+            {
+                currentCell = map.GetCellFromNode(node);
+                lastAimed.Add(currentCell);
+                if(node == aimingNode)
+                {
+                    currentCell.SetAbilityDamageAoE();
+                }
+                else
+                {
+                    currentCell.SetAbilityCastRange();
+                }
+            }
+        }
+        if (avilableNodes.Contains(aimingNode))
+        {
+            info.impactPos = target + new Vector2(0.5f, 0.5f);
+        }
+        else
+        {
+            info.impactPos = new Vector2(-1, -1);
+        }
+        return info;
+    }
     private HitInfo LinearTrap(Vector2 origin, Vector2 end,Character caster, Ability ability, bool drawFloor,bool setTrap)
     {
         HitInfo info = new HitInfo();
@@ -152,8 +201,10 @@ public class AimSystem
             for (int i = 0; i < validCells.Count; i++)
             {
                 validCells[i].SetAbilityDamageAoE();
-            }           
+            }
         }
+        lastAimed = validCells;
+
         if (setTrap)
         {
             trapMan.SetTrap(caster, validCells, ability);
@@ -277,9 +328,9 @@ public class AimSystem
         Vector2 direction = (end - origin).normalized * range;
         info.impactPos = direction + origin;
         Vector2 gap = (new Vector2(direction.y,direction.x).normalized) * thickness / 2;        
-        /*Debug.DrawLine(new Vector3((origin - gap).x,1, (origin - gap).y), new Vector3((direction - gap+ origin).x, 1, (direction - gap +origin).y));
+        Debug.DrawLine(new Vector3((origin - gap).x,1, (origin - gap).y), new Vector3((direction - gap+ origin).x, 1, (direction - gap +origin).y));
         Debug.DrawLine(new Vector3((origin).x, 1, (origin).y), new Vector3((direction + origin).x, 1, (direction + origin).y));
-        Debug.DrawLine(new Vector3((origin + gap).x, 1, (origin + gap).y), new Vector3((direction + gap + origin).x, 1, (direction + gap + origin).y));*/
+        Debug.DrawLine(new Vector3((origin + gap).x, 1, (origin + gap).y), new Vector3((direction + gap + origin).x, 1, (direction + gap + origin).y));
 
 
         Cell[] affectedCells_1 = LinearAim(origin, direction);
@@ -712,8 +763,8 @@ public class AimSystem
             if (!affectedsCoords.Contains(new Vector2((int)aim.x, j * yDirection)))
                 affectedsCoords.Add(new Vector2(( int)aim.x, j* yDirection));
         }
-        if (!affectedsCoords.Contains(new Vector2((int)aim.x + gap.x, newY +gap.y )))
-            affectedsCoords.Add(new Vector2((int)aim.x + gap.x, newY +gap.y));
+        if (!affectedsCoords.Contains(new Vector2(aim.x + gap.x, newY +gap.y )))
+            affectedsCoords.Add(new Vector2(aim.x + gap.x, newY +gap.y));
         Cell[] cellsToReturn = new Cell[affectedsCoords.Count];
         for (int i = 0; i < affectedsCoords.Count; i++)
         {

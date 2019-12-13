@@ -27,27 +27,30 @@ public class FogManager : MonoBehaviour
             List<Cell> newVisibles = new List<Cell>();
             foreach(Character character in allieds)
             {
-                if (map.GetCellFromCoord(character.Pos).IsAValidBush())
+                if (character.Alive)
                 {
-                    List<Cell> bushSection = map.GetBushSectionByPos(character.Pos);
-                    foreach(Cell cell in bushSection)
+                    if (map.GetCellFromCoord(character.Pos).IsAValidBush())
                     {
-                        if (!currentInVision.Contains(cell))
+                        List<Cell> bushSection = map.GetBushSectionByPos(character.Pos);
+                        foreach (Cell cell in bushSection)
+                        {
+                            if (!currentInVision.Contains(cell))
+                            {
+                                cell.SetVisible(true, team, toggleFog);
+                                currentInVision.Add(cell);
+                            }
+                        }
+                    }
+                    newVisibles = CalculateLineOfSight(character.Pos);
+                    foreach (Cell cell in newVisibles)
+                    {
+                        if (!currentInVision.Contains(cell) && !cell.IsAValidBush())
                         {
                             cell.SetVisible(true, team, toggleFog);
                             currentInVision.Add(cell);
                         }
                     }
-                }
-                newVisibles = CalculateLineOfSight(character.Pos);
-                foreach (Cell cell in newVisibles)
-                {
-                    if (!currentInVision.Contains(cell) && !cell.IsAValidBush())
-                    {
-                        cell.SetVisible(true, team, toggleFog);
-                        currentInVision.Add(cell);
-                    }
-                }
+                }                
             }
             foreach(Cell cell in lastVisibles)
             {

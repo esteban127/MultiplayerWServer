@@ -130,7 +130,7 @@ public class Server : SocketIOComponent
         });*/
 
         On("spawnObj", (spawnObject) => {
-            GameObject spawneable = Instantiate(serverObj.getObject(spawnObject.data["objectName"].ToString().Replace("\"", string.Empty)).prefav);
+            GameObject spawneable = Instantiate(serverObj.GetObject(spawnObject.data["objectName"].ToString().Replace("\"", string.Empty)).prefav);
             float x = spawnObject.data["position"]["x"].f;
             float y = spawnObject.data["position"]["y"].f;
             float z = spawnObject.data["position"]["z"].f;
@@ -198,6 +198,10 @@ public class Server : SocketIOComponent
     public void ReadyToEndTurn()
     {
         Emit("readyToEndTurn");
+    }
+    public void CancelReaedyToEndTurn()
+    {
+        Emit("cancelReadyToEndTurn");
     }
     public void SubmitAction(CharacterActionData data)
     {
@@ -334,13 +338,15 @@ public class CharacterActionData
     public List<MovList> mov;
     public bool sprinting;
     public string followID;
-    public Dictionary<int,Vector2Data> skills;
+    public List<int> skillsID;
+    public List<Vector2Data> skillsTarget;
 
 
     public CharacterActionData()
     {
         mov = new List<MovList>();
-        skills = new Dictionary<int, Vector2Data>();
+        skillsID = new List<int>();
+        skillsTarget = new List<Vector2Data>();
     }
     public List<Vector2> GetMov()
     {
@@ -378,16 +384,18 @@ public class CharacterActionData
     {
         foreach(int key in newSkills.Keys)
         {
-            skills.Add(key, new Vector2Data(newSkills[key].x, newSkills[key].y));
+            skillsID.Add(key);
+            skillsTarget.Add(new Vector2Data(newSkills[key].x, newSkills[key].y));
         }
     }
     public Dictionary<int,Vector2> GetSkills()
     {
         Dictionary<int, Vector2> skillsToReturn = new Dictionary<int, Vector2>();
-        foreach (int key in skills.Keys)
+        for (int i = 0; i < skillsID.Count; i++)
         {
-            skillsToReturn.Add(key, new Vector2(skills[key].x, skills[key].y));
-        }
+            skillsToReturn.Add(skillsID[i], new Vector2(skillsTarget[i].x, skillsTarget[i].y));
+        }            
+        
         return skillsToReturn;
     }
 }
@@ -439,7 +447,7 @@ class ServerObjectManager : MonoBehaviour
     {
         serverObjects = new Dictionary<string, ServerObject>();
     }
-    public ServerObject getObject(string key)
+    public ServerObject GetObject(string key)
     {
         return serverObjects[key];
     }

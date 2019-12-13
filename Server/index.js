@@ -60,6 +60,10 @@ io.on('connection',function(socket){
         }
 
     })
+    socket.on('cancelReadyToEndTurn',function(){        
+        player.ready = false;        
+
+    })
     socket.on('submitActionData',function(data){        
         actionData[player.id] = data;
         console.log("DataSubmited on " + player.id);

@@ -101,6 +101,7 @@ public class InputManager : MonoBehaviour
                 if (aimingAbility)
                 {
                     gameDirector.ConfirmAim();
+                    aimingAbility = false;
                 }
                 else
                 {                
@@ -134,11 +135,7 @@ public class InputManager : MonoBehaviour
                 {
                     gameDirector.DeleteLastAction();
                 }
-            }
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                gameDirector.ReadyToEndTurn();
-            }
+            }            
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
                 SelectAbility(0);
@@ -167,13 +164,28 @@ public class InputManager : MonoBehaviour
             {
                 SelectAbility(6);
             }
+            if (Input.GetKeyDown(KeyCode.Alpha8))
+            {
+                SelectAbility(7);
+            }
+        }
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            ConfirmTurn();
         }
         CameraImputs(); 
     }
 
     public void SelectAbility(int abilitySlot)
     {
-        aimingAbility = gameDirector.SelectAbility(abilitySlot);
+        if (inputEneable)
+        {
+            aimingAbility = gameDirector.SelectAbility(abilitySlot);
+        }
+    }
+    public void ConfirmTurn()
+    {
+        gameDirector.ReadyToEndTurn();
     }
 
 
