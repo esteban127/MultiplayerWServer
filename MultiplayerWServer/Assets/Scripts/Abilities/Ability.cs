@@ -21,7 +21,9 @@ public enum AbilityTags
     destroyOnContact,
     energyPerEnemyHit,
     energyOnActivate,
-    noDamage
+    noDamage,
+    ignoreCover,
+    cantAttack
 }
 
 public class Ability : MonoBehaviour
@@ -43,4 +45,5 @@ public class Ability : MonoBehaviour
     public int damage1;
     public int damage2;
     public Sprite icon;
+    public GameObject projectile;
 }

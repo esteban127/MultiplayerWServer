@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public enum StatusType
 {
@@ -34,6 +35,9 @@ public class Character : MonoBehaviour
     [SerializeField] Ability catalyzer1;
     [SerializeField] Ability catalyzer2;
 
+
+    HealthBar healthBar;
+    public HealthBar HealthBar { set { healthBar = value; } }
 
     private int team;
     public int Team { get { return team; } }
@@ -75,15 +79,17 @@ public class Character : MonoBehaviour
 
     private void Update()
     {
-        if (team != localTeam)
+        if (team != localTeam|| !alive)
         {
             if (visible && !model.activeInHierarchy)
             {
                 model.SetActive(true);
+                healthBar.gameObject.SetActive(true);
             }
             if (!visible && model.activeInHierarchy)
             {
                 model.SetActive(false);
+                healthBar.gameObject.SetActive(false);
             }
         }
     }
@@ -96,7 +102,7 @@ public class Character : MonoBehaviour
     {
         if (alive)
         {
-            AddEnergy(5, true);            
+            ActualizateEnergy(5);            
             ReplenishHealt(1);
             TickStatus();
             TickCooldowns();
@@ -151,21 +157,22 @@ public class Character : MonoBehaviour
         sprintScore = 38 + (hasted ? 20 : 0);
         movScore -= movSpended;
     }
-    public void AddEnergy(int amount, bool regen)
+    public void ActualizateEnergy(int amount)
     {
         energy += amount;
         if (energy > 100)
         {
             energy = 100;
         }
+        if(energy< 0)
+        {
+            energy = 0;
+        }
+        healthBar.ActualziateEnergyBar(energy);
     }
     public void AddEnergy(int amount)
     {
-        energy += (int)(amount * EnergyMultiply());
-        if (energy > 100)
-        {
-            energy = 100;
-        }
+        ActualizateEnergy((int)(amount * EnergyMultiply()));
     }
     
     public void TickStatus()
@@ -289,6 +296,7 @@ public class Character : MonoBehaviour
                 break;
             case 4:
                 key = ultimate;
+                energy -= ultimate.energyCost;
                 break;
             case 5:
                 key = catalyzer0;
@@ -304,6 +312,10 @@ public class Character : MonoBehaviour
     }
     public void SetOnCooldown(Ability ability)
     {        
+        if(ability== ultimate)
+        {
+            energy -= ultimate.energyCost;
+        }
         abilityCooldown[ability] = ability.cooldown;
     }
     public int GetCurrentCooldown(int abilitySlot)
@@ -386,6 +398,7 @@ public class Character : MonoBehaviour
     private void Die()
     {
         alive = false;
+        healthBar.gameObject.SetActive(false);
         transform.position = new Vector3(-100, 100, -100);
     }
 
@@ -439,7 +452,8 @@ public class Character : MonoBehaviour
             realHealth -= dmg;
             health = realHealth;
         }
-       
+
+        healthBar.ActualziateHealthBar(health, maxHealth);
     }
     public void ReplenishHealt(int ammount)
     {
@@ -449,6 +463,8 @@ public class Character : MonoBehaviour
         {
             health = maxHealth;
         }
+
+        healthBar.ActualziateHealthBar(health, maxHealth);
     }
     public void ApplyStatus(Status status)
     {
@@ -494,6 +510,8 @@ public class Character : MonoBehaviour
         currentPos = pos;
         health = maxHealth;
         realHealth = health;
+        ActualizateEnergy(0);
+        healthBar.ActualziateHealthBar(health, maxHealth);
         shield = 0;
         currentStatus = new List<Status>();        
         model.GetComponent<Renderer>().material = material;

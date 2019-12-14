@@ -63,7 +63,7 @@ public class AimSystem
 
                 break;
             case AimType.lineAoE:
-                hits[0] = LinearPirce(origin, end, ability.range0, ability.thickness, team, true, true, ability.tags.Contains(AbilityTags.ignoreWalls));
+                hits[0] = LinearPirce(origin, end, ability.range0, ability.thickness, team, true, true, ability.tags.Contains(AbilityTags.ignoreWalls), ability.tags.Contains(AbilityTags.ignoreCover));
             break;
         }
         return hits;
@@ -107,7 +107,7 @@ public class AimSystem
                 break;
 
             case AimType.lineAoE:
-                hits[0] = LinearPirce(origin, end, ability.range0, ability.thickness, team, false, false, ability.tags.Contains(AbilityTags.ignoreWalls));
+                hits[0] = LinearPirce(origin, end, ability.range0, ability.thickness, team, false, false, ability.tags.Contains(AbilityTags.ignoreWalls), ability.tags.Contains(AbilityTags.ignoreCover));
                 break;
         }
         return hits;
@@ -213,14 +213,17 @@ public class AimSystem
         return info;
     }
 
-    private List<HitInfo> LinearPirce(Vector2 origin, Vector2 end, float range, float thickness, int team, bool onlyVisible, bool drawFloor, bool ignoreWalls)
+    private List<HitInfo> LinearPirce(Vector2 origin, Vector2 end, float range, float thickness, int team, bool onlyVisible, bool drawFloor, bool ignoreWalls, bool ignoreCover)
     {
         List<HitInfo> info = new List<HitInfo>();
+        HitInfo targetHit = new HitInfo();
         Vector2 direction = (end - origin).normalized * range;
 
         Cell[] affectedCells_1 = LinearAim(origin, direction);
         List<Cell> validCells_1 = CalculateLinearImpactWithoutColision(affectedCells_1, team, onlyVisible, true);
         List<Cell> validCells = new List<Cell>();
+        targetHit.impactPos = ((end - origin).normalized * (origin - validCells_1[validCells_1.Count - 1].Pos).magnitude) + origin;
+        info.Add(targetHit);
         if (thickness > 0)
         {
             Vector2 gap = (new Vector2(direction.y, direction.x).normalized) * thickness / 2;
@@ -280,7 +283,7 @@ public class AimSystem
                 currentHit = new HitInfo();
                 currentHit.target = currentCharacter;
                 currentDirection = cell.Pos - origin;
-                if ((currentDirection).magnitude <= 1)
+                if ((currentDirection).magnitude <= 1|| ignoreCover)
                 {
                     currentHit.cover = false; // mele hits ignore cover                    
                 }
@@ -315,20 +318,19 @@ public class AimSystem
                             currentHit.cover = true;
                         }
                     }
-                }
+                }               
                 info.Add(currentHit);
             }
         }
         return info;
-    }   
+    }
 
-    private HitInfo LinearImpact(Vector2 origin, Vector2 end, float range,float thickness ,int team,bool onlyVisible, bool drawFloor)
+    private HitInfo LinearImpact(Vector2 origin, Vector2 end, float range, float thickness, int team, bool onlyVisible, bool drawFloor)
     {
         HitInfo info = new HitInfo();
         Vector2 direction = (end - origin).normalized * range;
-        info.impactPos = direction + origin;
-        Vector2 gap = (new Vector2(direction.y,direction.x).normalized) * thickness / 2;        
-        Debug.DrawLine(new Vector3((origin - gap).x,1, (origin - gap).y), new Vector3((direction - gap+ origin).x, 1, (direction - gap +origin).y));
+        Vector2 gap = (new Vector2(direction.y, direction.x).normalized) * thickness / 2;
+        Debug.DrawLine(new Vector3((origin - gap).x, 1, (origin - gap).y), new Vector3((direction - gap + origin).x, 1, (direction - gap + origin).y));
         Debug.DrawLine(new Vector3((origin).x, 1, (origin).y), new Vector3((direction + origin).x, 1, (direction + origin).y));
         Debug.DrawLine(new Vector3((origin + gap).x, 1, (origin + gap).y), new Vector3((direction + gap + origin).x, 1, (direction + gap + origin).y));
 
@@ -337,7 +339,7 @@ public class AimSystem
         List<Cell> validCells_1 = CalculateLinearImpact(affectedCells_1, team, onlyVisible);
         Cell lastCell = map.GetCellFromCoord(origin);
         List<Cell> validCells = new List<Cell>();
-
+        info.impactPos = ((end - origin).normalized * (origin - validCells_1[validCells_1.Count-1].Pos).magnitude) + origin;
         if (thickness > 0)
         {
             Cell[] affectedCells_0 = LinearAim(origin, direction, -gap);
@@ -395,6 +397,7 @@ public class AimSystem
                         lastCell = map.GetCellFromCoord(posibleImpactedCharacter_2.Pos);
                     }
                 }
+
             }
             else
             {
@@ -458,13 +461,14 @@ public class AimSystem
                     validCells.Add(cell);
                 }
             }
+
+            info.impactPos = ((end - origin).normalized * farestDistance) + origin;
         }
         else
         {
             validCells = validCells_1;
             lastCell = validCells[validCells.Count - 1];
-        }      
-        
+        }
 
         if (drawFloor)
         {

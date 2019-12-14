@@ -28,6 +28,7 @@ public enum CharacterAction
 
 public class GameDirector : MonoBehaviour
 {
+    [SerializeField] HealthBarsManager healthBars;
     [SerializeField] MapManager mapManager;
     [SerializeField] ActionBarDisplay actionBar;
     MovementManager movManager;
@@ -58,6 +59,7 @@ public class GameDirector : MonoBehaviour
     static public DirectorDelegate turnStart;
     bool ready = false;
     bool submited = false;
+    bool cantAttack = false;
 
     #region Local
 
@@ -97,6 +99,7 @@ public class GameDirector : MonoBehaviour
             spawnPos = mapManager.GetSpawnBaseSpawnPoint(team);
             gap = (int)players.Count / 2;
             spawnPos.y -= gap < 2 ? -(gap % 2 + 1) : (gap % 2 + 1);
+            newPlayer.GetComponent<Character>().HealthBar = healthBars.GenerateHealthBar(newPlayer.transform);
             newPlayer.GetComponent<Character>().Spawn(spawnPos, team);
             if (id == Server.id)
                 localCharacter = newPlayer.GetComponent<Character>();
@@ -148,6 +151,7 @@ public class GameDirector : MonoBehaviour
     private void Turn1()
     {
         actionBar.DisableAll();
+        actionBar.EneableEndTurn();
         actionsToReplicate = new List<CharacterActionData>();        
         turn1 = true;
         fogManager.CalculateVision(allieds,true);
@@ -160,7 +164,7 @@ public class GameDirector : MonoBehaviour
     }
 
     public void NewTurn()
-    {
+    {        
         turnStart();
         CheckBuffSpawneds();
         fogManager.CalculateVision(allieds, true);
@@ -172,6 +176,7 @@ public class GameDirector : MonoBehaviour
         submited = false;
         if (localCharacter.Alive)
         {
+            cantAttack = false;
             actionPoints = 3;
             actionBar.EneableAll();
             ActualziateActionBar();
@@ -476,23 +481,47 @@ public class GameDirector : MonoBehaviour
         }
         else
         {
-            givenAbility = localCharacter.TryToGetAbility(abilitySlot, actionPoints);
-            if (givenAbility == null)
+            givenAbility = localCharacter.TryToGetAbility(abilitySlot, (cantAttack ? 0:actionPoints));
+            if (givenAbility == null )
             {
+                if(selectedAbility != null)
+                    CancelAim();
+                return false;
+            }
+            if(givenAbility == selectedAbility)
+            {
+                CancelAim();
                 return false;
             }
             actionBar.Select(abilitySlot);
-            selectedAbility = givenAbility;
-            selectedAbilitySlot = abilitySlot;
-            if (selectedAbility.aim == AimType.selfBuff)
+            if (givenAbility.aim == AimType.selfBuff)
             {
+                if (givenAbility.tags.Contains(AbilityTags.cantAttack))
+                {
+                    if(actionPoints>= 2)
+                    {
+                        cantAttack = true;                        
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }               
+
                 actionLog.Add((CharacterAction)abilitySlot);
-                ModifiActionPoints(-selectedAbility.cost);
+                ModifiActionPoints(-givenAbility.cost);
                 abilitiesCasted.Add(abilitySlot, localCharacter.Pos);
                 return false;
+                
             }
             else
             {
+                if(selectedAbility != null)
+                {
+                    actionBar.Unselect(selectedAbilitySlot);
+                }
+                selectedAbility = givenAbility;
+                selectedAbilitySlot = abilitySlot;
                 return true;
             }
         }
@@ -503,8 +532,14 @@ public class GameDirector : MonoBehaviour
         if(delete)
             DeleteSpecificAction((CharacterAction)abilitySlot);
 
+        selectedAbility = null;
+        aim.RestoreFloorColors();
         Debug.Log("CancelAbility");
         actionBar.Unselect(abilitySlot);
+        if (localCharacter.GetAbility(abilitySlot).tags.Contains(AbilityTags.cantAttack))
+        {
+            cantAttack = false;
+        }
         ModifiActionPoints(localCharacter.GetAbility(abilitySlot).cost);
         movManager.DrawMovement(currentNode, currentMoveScore, actionPoints, localCharacter.SprintScore);
         abilitiesCasted.Remove(abilitySlot);
@@ -535,20 +570,22 @@ public class GameDirector : MonoBehaviour
                 aim.RestoreFloorColors();
                 abilitiesCasted.Add(selectedAbilitySlot, currentAim);
                 movManager.DrawMovement(currentNode, currentMoveScore, actionPoints, localCharacter.SprintScore);
+                selectedAbility = null;
             }
         }
         else
-        {
-
+        {                        
             actionLog.Add((CharacterAction)selectedAbilitySlot);
             ModifiActionPoints(-selectedAbility.cost);
             aim.RestoreFloorColors();
             abilitiesCasted.Add(selectedAbilitySlot, currentAim);
             movManager.DrawMovement(currentNode, currentMoveScore, actionPoints, localCharacter.SprintScore);
+            selectedAbility = null;
         }        
     }
     public void CancelAim()
     {
+        selectedAbility = null;
         actionBar.Unselect(selectedAbilitySlot);
         aim.RestoreFloorColors();
         movManager.DrawMovement(currentNode, currentMoveScore, actionPoints, localCharacter.SprintScore);
@@ -562,12 +599,16 @@ public class GameDirector : MonoBehaviour
         {
             if (ready)
             {
+                actionBar.CancelEndTurn();
                 sv.CancelReaedyToEndTurn();
+                ready = false;
                 InputManager.inputEneable = true;
             }
             else
             {
+                actionBar.ConfirmEndTurn();
                 sv.ReadyToEndTurn();
+                ready = true;
                 InputManager.inputEneable = false;
             }
         }            
@@ -586,7 +627,7 @@ public class GameDirector : MonoBehaviour
 
     private void Submit()
     {
-
+        actionBar.CancelEndTurn();
         actionBar.DisableAll();
         submited = true;
         CharacterActionData actionData = new CharacterActionData();
@@ -736,6 +777,12 @@ public class GameDirector : MonoBehaviour
             Vector2 target = abilityCasted.target;
             Character caster = abilityCasted.caster;
             Debug.Log(caster.name + " Cast:" + currentAbility.abilityName + "!!!");
+            Projectile projectile = null;
+            if (currentAbility.projectile != null)
+            {
+                projectile = currentAbility.projectile.GetComponent<Projectile>();
+            }
+
             if (currentAbility.aim == AimType.selfBuff)
             {
                 caster.AddEnergy(currentAbility.energyProduced);
@@ -748,10 +795,13 @@ public class GameDirector : MonoBehaviour
             {
                 List<HitInfo>[] hits = aim.CheckImpact(caster.Pos, target, caster, currentAbility);
                 ReplicateImpacts(hits, currentAbility,caster);
+                if (projectile != null)
+                {
+                    projectile.Spawn(caster.Pos, hits[0][0].impactPos);
+                }
             }
-            //play animations&stuff
-            caster.SetOnCooldown(currentAbility);      
-            yield return new WaitForSeconds(0.5f);
+            caster.SetOnCooldown(currentAbility);
+            yield return new WaitForSeconds(1.5f);
         }
         foreach (AbilityCastedInfo abilityCasted in dashAbilities) // dash
         {
@@ -760,6 +810,11 @@ public class GameDirector : MonoBehaviour
             Character caster = abilityCasted.caster;
             List<HitInfo>[] hits = aim.CheckImpact(caster.Pos, target, caster, currentAbility);
             Debug.Log(caster.name + " Cast:" + currentAbility.abilityName + "!!!");
+            Projectile projectile = null;
+            if (currentAbility.projectile != null)
+            {
+                projectile = currentAbility.projectile.GetComponent<Projectile>();
+            }
             Cell targetCell = mapManager.GetCellFromCoord(hits[0][0].impactPos);
             if(mapManager.GetCharacterByPos(targetCell.Pos,false) == null)
             {
@@ -779,8 +834,12 @@ public class GameDirector : MonoBehaviour
                 mapManager.ActualziatePlayerPos(caster, neighborsNodes[0].Pos);
             }
             ReplicateImpacts(hits, currentAbility,caster);
+            if (projectile != null)
+            {
+                projectile.Spawn(caster.Pos, hits[0][0].impactPos);
+            }
             caster.SetOnCooldown(currentAbility);
-            //play animations&stuff
+            yield return new WaitForSeconds(1.5f);
         }
         foreach (AbilityCastedInfo abilityCasted in fireAbilities) // fire
         {
@@ -788,11 +847,21 @@ public class GameDirector : MonoBehaviour
             Vector2 target = abilityCasted.target;
             Character caster = abilityCasted.caster;
             Debug.Log(caster.name + " Cast:" + currentAbility.abilityName + "!!!");
+            Projectile projectile = null;
+            if (currentAbility.projectile != null)
+            {
+                projectile = currentAbility.projectile.GetComponent<Projectile>();
+            }
             List<HitInfo>[] hits = aim.CheckImpact(caster.Pos, target, caster, currentAbility);            
-            //play animations&stuff
+            if (projectile != null)
+            {
+                projectile.Spawn(caster.Pos, hits[0][0].impactPos);
+            }
             yield return new WaitForSeconds(0.5f);
-            caster.SetOnCooldown(currentAbility);
             ReplicateImpacts(hits, currentAbility, caster);
+            yield return new WaitForSeconds(1.0f);
+            caster.SetOnCooldown(currentAbility);
+            
         }
 
 
@@ -810,6 +879,30 @@ public class GameDirector : MonoBehaviour
             {
                 enemies[i].AlreadyMove = true;
                 mapManager.ActualziatePlayerPos(enemies[i], new Vector2(-1, -1));
+            }
+        }
+        fogManager.CalculateVision(allieds, true);
+        fogManager.CalculateVision(enemies, false);
+        if (localCharacter.Team == 0)
+        {
+            foreach (Character enemy in enemies)
+            {
+                enemy.SetVisible(mapManager.GetCellFromCoord(enemy.Pos).Visible_0);
+            }
+            foreach (Character allied in allieds)
+            {
+                allied.SetVisible(mapManager.GetCellFromCoord(allied.Pos).Visible_1);
+            }
+        }
+        else
+        {
+            foreach (Character enemy in enemies)
+            {
+                enemy.SetVisible(mapManager.GetCellFromCoord(enemy.Pos).Visible_1);
+            }
+            foreach (Character allied in allieds)
+            {
+                allied.SetVisible(mapManager.GetCellFromCoord(allied.Pos).Visible_0);
             }
         }
         GC.Collect();

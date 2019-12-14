@@ -907,11 +907,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 807722fcfb0055946943dc02d986503e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  healthBars: {fileID: 2071071788}
   mapManager: {fileID: 1683298630}
   actionBar: {fileID: 1614845688}
   character0: {fileID: 778998144979383206, guid: 1115677b7a904c74d979bfa326ac7167,
     type: 3}
-  character1: {fileID: 778998144979383206, guid: 023ab9899939a0148bdbcd46399c6146,
+  character1: {fileID: 778998144979383206, guid: 92557a90b3f26b14c9602e512a41e9fe,
     type: 3}
   lineRenderer: {fileID: 1600885670}
 --- !u!1 &590990406
@@ -1004,6 +1005,7 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_Children:
+  - {fileID: 2071071787}
   - {fileID: 1614845687}
   m_Father: {fileID: 0}
   m_RootOrder: 5
@@ -2272,7 +2274,7 @@ RectTransform:
   - {fileID: 1079896374}
   - {fileID: 1658975615}
   m_Father: {fileID: 590990410}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0.305}
@@ -2986,3 +2988,53 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2071071786
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2071071787}
+  - component: {fileID: 2071071788}
+  m_Layer: 5
+  m_Name: HealthBars
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2071071787
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2071071786}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 590990410}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2071071788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2071071786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ebb1d8e9696dd74fa708e63b0e3437b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  healthBarPrefab: {fileID: 8626331680620844405, guid: 80132953d54ec414186800966af60548,
+    type: 3}

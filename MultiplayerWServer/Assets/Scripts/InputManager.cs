@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class InputManager : MonoBehaviour
 {
@@ -27,103 +28,109 @@ public class InputManager : MonoBehaviour
 
     void FixedUpdate()
     {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-        int layer_mask = LayerMask.GetMask("Characters");
-        if (Physics.Raycast(ray, out hit, 50f, layer_mask))
+        if (!EventSystem.current.IsPointerOverGameObject())
         {
-            if (lastCell != null)
-                lastCell.GetComponent<Cell>().HighLight(false);
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+            int layer_mask = LayerMask.GetMask("Characters");
+            if (Physics.Raycast(ray, out hit, 50f, layer_mask))
+            {
+                if (lastCell != null)
+                    lastCell.GetComponent<Cell>().HighLight(false);
             
-            else
-            {
-                if (characterOnMause != hit.transform.gameObject)
+                else
                 {
-                    if (characterOnMause != null)
+                    if (characterOnMause != hit.transform.gameObject)
                     {
-                        //characterOnMause.GetComponent<Cell>().HighLight(false);
-                    }
-                    characterOnMause = hit.transform.gameObject;
-                    //characterOnMause.GetComponent<Cell>().HighLight(true);
-                }
-            }
-        }
-        else
-        {
-            characterOnMause = null;
-        }        
-        layer_mask = LayerMask.GetMask("Cells");
-        if (Physics.Raycast(ray, out hit, 50f, layer_mask))
-        {
-            if (aimingAbility)
-            {
-                gameDirector.Aiming(new Vector2(hit.point.x, hit.point.z));
-            }
-            else
-            {
-                if (characterOnMause == null)
-                {
-                    if (lastCell != hit.transform.gameObject)
-                    {
-                        if (lastCell != null)
-                            lastCell.GetComponent<Cell>().HighLight(false);
-                        lastCell = hit.transform.gameObject;
-                        lastCell.GetComponent<Cell>().HighLight(true);
+                        if (characterOnMause != null)
+                        {
+                            //characterOnMause.GetComponent<Cell>().HighLight(false);
+                        }
+                        characterOnMause = hit.transform.gameObject;
+                        //characterOnMause.GetComponent<Cell>().HighLight(true);
                     }
                 }
             }
+            else
+            {
+                characterOnMause = null;
+            }        
+            layer_mask = LayerMask.GetMask("Cells");
+            if (Physics.Raycast(ray, out hit, 50f, layer_mask))
+            {
+                if (aimingAbility)
+                {
+                    gameDirector.Aiming(new Vector2(hit.point.x, hit.point.z));
+                }
+                else
+                {
+                    if (characterOnMause == null)
+                    {
+                        if (lastCell != hit.transform.gameObject)
+                        {
+                            if (lastCell != null)
+                                lastCell.GetComponent<Cell>().HighLight(false);
+                            lastCell = hit.transform.gameObject;
+                            lastCell.GetComponent<Cell>().HighLight(true);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                lastCell = null;
+            }
         }
-        else
-        {
-            lastCell = null;
-        }       
 
     }
     private void Update()
     {
         if (inputEneable)
         {
-            if (Input.GetMouseButtonDown(0)) //cellClick
+            if (!EventSystem.current.IsPointerOverGameObject())
             {
-                if (lastCell != null && !aimingAbility)
+                if (Input.GetMouseButtonDown(0)) //cellClick
                 {
-                    lastCellClicked = lastCell;
-                    lastCellClicked.GetComponent<Cell>().ClickedHighLight(true);
-                }
-                if (characterOnMause != null && !aimingAbility)
-                {
-                    characterClicked = characterOnMause;
-                    //characterClicked.GetComponent<Cell>().ClickedHighLight(true);
-                }
-            }
-            if (Input.GetMouseButtonUp(0)) //cellReleased
-            {
-                if (aimingAbility)
-                {
-                    gameDirector.ConfirmAim();
-                    aimingAbility = false;
-                }
-                else
-                {                
-
-                    if (lastCellClicked != null)
+                    if (lastCell != null && !aimingAbility)
                     {
-                        lastCellClicked.GetComponent<Cell>().ClickedHighLight(false);
-                        if (lastCellClicked == lastCell)
-                            lastCell.GetComponent<Cell>().HighLight(true);
-                        Node currentNode = map.GetNodeFromWorldPosition(lastCellClicked.transform.position);                        
-                        gameDirector.MovCommand(currentNode);                        
-                        lastCellClicked = null;
+                        lastCellClicked = lastCell;
+                        lastCellClicked.GetComponent<Cell>().ClickedHighLight(true);
+                    }
+                    if (characterOnMause != null && !aimingAbility)
+                    {
+                        characterClicked = characterOnMause;
+                        //characterClicked.GetComponent<Cell>().ClickedHighLight(true);
+                    }
+                }
+                if (Input.GetMouseButtonUp(0)) //cellReleased
+                {
+                    if (aimingAbility)
+                    {
+                        gameDirector.ConfirmAim();
+                        aimingAbility = false;
                     }
                     else
                     {
-                        if (characterClicked != null)
+
+                        if (lastCellClicked != null)
                         {
-                            gameDirector.CharacterClicked(characterClicked);
+                            lastCellClicked.GetComponent<Cell>().ClickedHighLight(false);
+                            if (lastCellClicked == lastCell)
+                                lastCell.GetComponent<Cell>().HighLight(true);
+                            Node currentNode = map.GetNodeFromWorldPosition(lastCellClicked.transform.position);
+                            gameDirector.MovCommand(currentNode);
+                            lastCellClicked = null;
+                        }
+                        else
+                        {
+                            if (characterClicked != null)
+                            {
+                                gameDirector.CharacterClicked(characterClicked);
+                            }
                         }
                     }
-                }                         
-            }
+                }
+            }           
             if (Input.GetMouseButtonUp(1)) 
             {
                 if (aimingAbility)

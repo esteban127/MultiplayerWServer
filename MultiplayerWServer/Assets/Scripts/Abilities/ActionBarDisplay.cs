@@ -74,11 +74,11 @@ public class ActionBarDisplay : MonoBehaviour
     {
         GetButtonByPos(pos).GetComponent<Image>().color = notSelectedColor;
     }
-    public void ConfirmEndTurn(int pos)
+    public void ConfirmEndTurn()
     {
         endTurnButton.GetComponent<Image>().color = selectedColor;
     }
-    public void CancelEndTurn(int pos)
+    public void CancelEndTurn()
     {
         endTurnButton.GetComponent<Image>().color = notSelectedColor;
     }
@@ -89,6 +89,10 @@ public class ActionBarDisplay : MonoBehaviour
         {
             GetButtonByPos(i).interactable = false;            
         }
+    }
+    public void EneableEndTurn()
+    {
+        endTurnButton.interactable = true;
     }
     public void EneableAll()
     {
