@@ -375,7 +375,7 @@ public class CharacterActionData
             provitionalList = new MovList();
             foreach (Vector2 pos in list)
             {
-                provitionalList.list.Add(new Vector2Data(pos.x,pos.y));
+                provitionalList.list.Add(new Vector2Data((int)pos.x,(int)pos.y));
             }
             mov.Add(provitionalList);
         }
@@ -385,7 +385,7 @@ public class CharacterActionData
         foreach(int key in newSkills.Keys)
         {
             skillsID.Add(key);
-            skillsTarget.Add(new Vector2Data(newSkills[key].x, newSkills[key].y));
+            skillsTarget.Add(new Vector2Data((int)(newSkills[key].x*100), (int)(newSkills[key].y*100)));
         }
     }
     public Dictionary<int,Vector2> GetSkills()
@@ -393,7 +393,7 @@ public class CharacterActionData
         Dictionary<int, Vector2> skillsToReturn = new Dictionary<int, Vector2>();
         for (int i = 0; i < skillsID.Count; i++)
         {
-            skillsToReturn.Add(skillsID[i], new Vector2(skillsTarget[i].x, skillsTarget[i].y));
+            skillsToReturn.Add(skillsID[i], new Vector2((float)skillsTarget[i].x/100, (float)skillsTarget[i].y/100));
         }            
         
         return skillsToReturn;
@@ -424,13 +424,13 @@ public class MovList
 [System.Serializable]
 public class Vector2Data
 {
-    public Vector2Data(float _x, float _y)
+    public Vector2Data(int _x, int _y)
     {
         x = _x;
         y = _y;
     }
-    public float x;
-    public float y;
+    public int x;
+    public int y;
 }
 
 [System.Serializable]

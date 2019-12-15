@@ -8,25 +8,24 @@ public class FogManager : MonoBehaviour
     float viewRange = 6.05f;
     float thickness = .3f;
     List<Cell> currentInVision;
-    List<Cell> lastVisibles;
 
     public FogManager(MapManager _map)
     {
         map = _map;
         currentInVision = new List<Cell>();
-        lastVisibles = new List<Cell>();
     }
 
     public void CalculateVision (List<Character> allieds, bool toggleFog)
     {
+        Dictionary<Character, List<Cell>> currentVisibleCells = new Dictionary<Character, List<Cell>>();
         if (allieds.Count > 0)
         {
-            lastVisibles = currentInVision;
             int team = allieds[0].Team;
             currentInVision = new List<Cell>();
             List<Cell> newVisibles = new List<Cell>();
             foreach(Character character in allieds)
             {
+                newVisibles = new List<Cell>();
                 if (character.Alive)
                 {
                     if (map.GetCellFromCoord(character.Pos).IsAValidBush())
@@ -50,15 +49,21 @@ public class FogManager : MonoBehaviour
                             currentInVision.Add(cell);
                         }
                     }
-                }                
-            }
-            foreach(Cell cell in lastVisibles)
-            {
-                if (!currentInVision.Contains(cell))
-                {
-                    cell.SetVisible(false, team,toggleFog);
                 }
+                currentVisibleCells.Add(character, newVisibles);                
             }
+            foreach(Character character in allieds)
+            {
+                foreach (Cell cell in character.visibleCells)
+                {
+                    if (!currentInVision.Contains(cell))
+                    {
+                        cell.SetVisible(false, team, toggleFog);
+                    }
+                }
+                character.visibleCells = currentVisibleCells[character];
+            }
+            
         }
     }
 

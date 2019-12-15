@@ -165,7 +165,6 @@ public class Cell : MonoBehaviour
         if(currentBuff!= PickeableBuff.None)
         {
 
-            playerDeadHeal.SetActive(false);
             if (buff.activeInHierarchy)
             {
                 buff.SetActive(false);
@@ -182,6 +181,7 @@ public class Cell : MonoBehaviour
                 {
                     return PickeableBuff.None;
                 }
+                playerDeadHeal.SetActive(false);
             }
             currentBuff = PickeableBuff.None;
         }

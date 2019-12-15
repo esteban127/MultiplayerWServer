@@ -73,7 +73,9 @@ public class Character : MonoBehaviour
     [SerializeField] Material inviMaterial;
     [SerializeField] GameObject model;
     [SerializeField] private int maxHealth;
+    public List<Cell> visibleCells;
     bool alive = true;
+    bool gotDamaged = false;
     public bool Alive { get { return alive; } set { alive = value; } }
 
 
@@ -81,16 +83,19 @@ public class Character : MonoBehaviour
     {
         if (team != localTeam|| !alive)
         {
-            if (visible && !model.activeInHierarchy)
+            if ((visible || gotDamaged) && !model.activeInHierarchy)
             {
                 model.SetActive(true);
                 healthBar.gameObject.SetActive(true);
             }
-            if (!visible && model.activeInHierarchy)
+            else
             {
-                model.SetActive(false);
-                healthBar.gameObject.SetActive(false);
-            }
+                if (!visible && !gotDamaged && model.activeInHierarchy)
+                {
+                    model.SetActive(false);
+                    healthBar.gameObject.SetActive(false);
+                }
+            }            
         }
     }
     private void Awake()
@@ -443,17 +448,38 @@ public class Character : MonoBehaviour
                 dmg -= shield;
                 shield = 0;
                 realHealth -= dmg;
-                health = realHealth;
+                if (realHealth > 0)
+                {
+                    health = realHealth;
+                }
+                else
+                {
+                    health = 0;
+                }
             }  
         }
         else
         {
 
             realHealth -= dmg;
-            health = realHealth;
+            if (realHealth > 0)
+            {
+                health = realHealth;
+            }
+            else
+            {
+                health = 0;
+            }
         }
-
+        StartCoroutine(DamageFeedback());
         healthBar.ActualziateHealthBar(health, maxHealth);
+    }
+    IEnumerator DamageFeedback()
+    {
+        gotDamaged = true;
+        Debug.Log("damaged");
+        yield return new WaitForSeconds(0.5f);
+        gotDamaged = false;
     }
     public void ReplenishHealt(int ammount)
     {

@@ -869,6 +869,7 @@ public class GameDirector : MonoBehaviour
         {
             if (!allieds[i].CheckItsAlive())
             {
+                mapManager.GetCellFromCoord(allieds[i].Pos).SpawnPlayerDeadHeal(allieds[i].Team, false);
                 allieds[i].AlreadyMove = true;
                 mapManager.ActualziatePlayerPos(allieds[i], new Vector2(-1, -1));
             }
@@ -877,6 +878,7 @@ public class GameDirector : MonoBehaviour
         {
             if (!enemies[i].CheckItsAlive())
             {
+                mapManager.GetCellFromCoord(enemies[i].Pos).SpawnPlayerDeadHeal(enemies[i].Team, true);
                 enemies[i].AlreadyMove = true;
                 mapManager.ActualziatePlayerPos(enemies[i], new Vector2(-1, -1));
             }
@@ -1133,13 +1135,14 @@ public class GameDirector : MonoBehaviour
                 }                
             }
 
-            for (int i = 0; i < followingCharacters.Count; i++)
+            for (int i = 0; i < movingCharacters.Count; i++)
             {
-                if (!followingCharacters[i].CheckItsAlive())
+                if (!movingCharacters[i].CheckItsAlive())
                 {
-                    followingCharacters[i].AlreadyMove = true;
+                    mapManager.GetCellFromCoord(movingCharacters[i].Pos).SpawnPlayerDeadHeal(movingCharacters[i].Team, movingCharacters[i].Team!= localCharacter.Team);
+                    movingCharacters[i].AlreadyMove = true;
                     charactersMoving--;
-                    mapManager.ActualziatePlayerPos(followingCharacters[i], new Vector2(-1, -1));
+                    mapManager.ActualziatePlayerPos(movingCharacters[i], new Vector2(-1, -1));
                 }
             }
             movCounter++;
@@ -1390,6 +1393,7 @@ public class GameDirector : MonoBehaviour
             {
                 if (!followingCharacters[i].CheckItsAlive())
                 {
+                    mapManager.GetCellFromCoord(followingCharacters[i].Pos).SpawnPlayerDeadHeal(followingCharacters[i].Team, followingCharacters[i].Team != localCharacter.Team);
                     followingCharacters[i].AlreadyMove = true;
                     charactersMoving--;
                     mapManager.ActualziatePlayerPos(followingCharacters[i], new Vector2(-1, -1));
